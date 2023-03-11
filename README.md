@@ -12,9 +12,8 @@
 后台目前接入的服务默认是ChatGPT，也同时兼容BingAI或者其他国内模型，只需Node服务配置下环境变量即可。
 
 <p align="center">
-https://user-images.githubusercontent.com/9939767/224280622-811fe048-8f39-469b-a199-53b32098b100.mov
+    <video width="248px" src="https://user-images.githubusercontent.com/9939767/224280622-811fe048-8f39-469b-a199-53b32098b100.mov" controls autoplay />
 </p>
-
 
 ## 项目体验
 
