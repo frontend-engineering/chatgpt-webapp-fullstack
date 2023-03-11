@@ -11,14 +11,18 @@
 
 后台目前接入的服务默认是ChatGPT，也同时兼容BingAI或者其他国内模型，只需Node服务配置下环境变量即可。
 
-
+<p align="center">
 https://user-images.githubusercontent.com/9939767/224280622-811fe048-8f39-469b-a199-53b32098b100.mov
-
+</p>
 
 
 ## 项目体验
 
 在微信中打开 [DEMO](https://chat.webinfra.cloud)
+或扫码
+<p align="center">
+  <img alt="demo qr" width="128px" src="./assets/qr.jpg">
+</p>
 
 ## 项目结构说明
 
