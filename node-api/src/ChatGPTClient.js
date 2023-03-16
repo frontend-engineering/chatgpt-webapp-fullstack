@@ -287,9 +287,9 @@ export default class ChatGPTClient {
         if (this.isChatGptModel) {
             // Doing it this way instead of having each message be a separate element in the array seems to be more reliable,
             // especially when it comes to keeping the AI in character. It also seems to improve coherency and context retention.
-            payload = await this.buildPrompt(conversation.messages, userMessage.id, true);
+            payload = await this.buildPrompt(conversation.messages, userMessage.id, true, opts.customPrompt);
         } else {
-            payload = await this.buildPrompt(conversation.messages, userMessage.id);
+            payload = await this.buildPrompt(conversation.messages, userMessage.id, false, opts.customPrompt);
         }
 
         let reply = '';
@@ -358,7 +358,7 @@ export default class ChatGPTClient {
         };
     }
 
-    async buildPrompt(messages, parentMessageId, isChatGptModel = false) {
+    async buildPrompt(messages, parentMessageId, isChatGptModel = false, customPrompt = '') {
         const orderedMessages = this.constructor.getMessagesForConversation(messages, parentMessageId);
 
         let promptPrefix;
@@ -436,8 +436,13 @@ export default class ChatGPTClient {
             }
             return true;
         };
-
-        await buildPromptBody();
+        if (customPrompt === '') {
+            await buildPromptBody();
+        } else {
+            const lastIdx = messages.length - 1
+            const latestMsg = messages[lastIdx]
+            promptBody = `${customPrompt}\n\n${latestMsg.message}`
+        }
 
         const prompt = `${promptBody}${promptSuffix}`;
         if (isChatGptModel) {

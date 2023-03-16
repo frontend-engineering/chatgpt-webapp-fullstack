@@ -143,6 +143,9 @@ server.post('/api/chat', async (request, reply) => {
     });
 
     let onProgress;
+
+
+
     if (body.stream === true) {
         onProgress = (token) => {
             if (settings.apiOptions?.debug) {
@@ -182,6 +185,7 @@ server.post('/api/chat', async (request, reply) => {
             targetClient = messageClient[Math.floor(Math.random() * messageClient.length)];
         }
         result = await targetClient.sendMessage(body.message, {
+            customPrompt: body.prompt ? body.prompt.toString() : undefined,
             jailbreakConversationId: body.jailbreakConversationId ? body.jailbreakConversationId.toString() : undefined,
             conversationId: body.conversationId ? body.conversationId.toString() : undefined,
             parentMessageId: body.parentMessageId ? body.parentMessageId.toString() : undefined,
