@@ -73,7 +73,7 @@ export const callBridge = async (options) => {
                     return;
                 }
                 if (message.event === 'result') {
-                    const result = JSON.parse(message.data);                            
+                    const result = JSON.parse(message.data);
                     console.log('result: ', result.response);
                     msgId = result.messageId;
                     conversationId = result.conversationId;

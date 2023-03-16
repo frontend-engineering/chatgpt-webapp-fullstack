@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar } from 'antd-mobile'
+import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar, Tag, Popover } from 'antd-mobile'
 import { PlayOutline, HeartOutline } from 'antd-mobile-icons'
 import { callBridge } from './ChatServiceBridge';
 import Messages from './Messages';
@@ -19,6 +19,7 @@ function ChatComponent(props) {
     const [answer, setAnswer] = useState();
     const [hasNotice, setHasNotice] = useState('');
     const [abortSignal, setAbortSignal] = useState(null);
+    const [selectedPrompt, setSelectedPrompt] = useState(-1);
 
     const answerTSRef = useRef();
     answerTSRef.current = answerTS;
@@ -39,7 +40,7 @@ function ChatComponent(props) {
     const genRandomMsgId = () => {
         return `msg-${new Date().valueOf()}-${Math.floor(Math.random() * 10)}`;
     }
-    
+
     const inputQuestion = val => {
         setQuestion(val);
     }
@@ -97,12 +98,16 @@ function ChatComponent(props) {
         setTyping(true);
         // 向云服务发起调用
         try {
+            const chatData = {
+                message: question,
+                parentMessageId: msgId,
+                conversationId: convId,
+            }
+            if (selectedPrompt !== -1) {
+                chatData.prompt = promptList[selectedPrompt].prompt
+            }
             const callRes = await callBridge({
-                data: {
-                    message: question,
-                    parentMessageId: msgId,
-                    conversationId: convId,
-                },
+                data: chatData,
                 onmessage,
                 onopen,
                 onclose,
@@ -112,7 +117,7 @@ function ChatComponent(props) {
                 },
                 debug: props.debug
             })
- 
+
             console.log('client stream result: ', abortSignalRef.current, callRes);
             const { response, messageId, conversationId } = callRes || {}
 
@@ -149,6 +154,19 @@ function ChatComponent(props) {
             content: 'Coming Soon'
         })
     }
+
+    const promptList = [
+        {
+            label: '英翻中',
+            value: 0,
+            prompt: 'Translate English into Chinese'
+        },
+        {
+            label: '文法修正',
+            value: 1,
+            prompt: 'Correct any grammar mistakes below'
+        },
+    ]
 
     const deleteItem = (id, type) => {
         if (!id) {
@@ -200,25 +218,34 @@ function ChatComponent(props) {
         setTyping(false);
     }
 
+    const onClickPrompt = (e, val) => {
+        e.preventDefault();
+        if (selectedPrompt === val) {
+            setSelectedPrompt(-1)
+        } else {
+            setSelectedPrompt(val)
+        }
+    }
+
     return (<div className="container">
         <div className="chatbox">
             <div className="top-bar">
-            <div className="avatar">
-                <p>W</p>
+                <div className="avatar">
+                    <p>W</p>
+                </div>
+                <div className="name">WebInfra</div>
+                <div className="menu">
+                    <HeartOutline onClick={startCollect} />
+                    <ShareLogo onClick={startShare} />
+                </div>
             </div>
-            <div className="name">WebInfra</div>
-            <div className="menu">
-                <HeartOutline onClick={startCollect} />
-                <ShareLogo onClick={startShare} />
-            </div>
-            </div>
-            { hasNotice ? <div className='notice'>
+            {hasNotice ? <div className='notice'>
                 <NoticeBar content={hasNotice} color='alert' closeable onClose={() => { setHasNotice('') }} />
-            </div> : null }
+            </div> : null}
             <div className="middle" style={{ marginTop: hasNotice ? '85px' : '60px' }}>
                 <div className="chat-container">
                     <Messages
-                        retMsgs={[ ...retMsgs, answer ? { msg: answer, timestamp: answerTS } : null ].map(item => { item && (item.type = 'incoming'); return item })}
+                        retMsgs={[...retMsgs, answer ? { msg: answer, timestamp: answerTS } : null].map(item => { item && (item.type = 'incoming'); return item })}
                         outMsgs={outMsgs.map(item => { item && (item.type = 'outgoing'); return item })}
                         userInfo={userInfo}
                         onItemDeleted={deleteItem}
@@ -227,7 +254,20 @@ function ChatComponent(props) {
                 </div>
             </div>
             <div className="bottom-bar">
-
+                <div className="prompt-container" style={{ visibility: typing ? 'hidden' : 'unset' }}>
+                    {
+                        promptList.map((item, index) => (<Popover
+                            key={index}
+                            content={item.label}
+                            trigger='click'
+                            placement='top-start'
+                        >
+                            <Tag className={selectedPrompt === item.value ? 'selected-tag' : 'tag'} onClick={(e) => onClickPrompt(e, item.value)} round>
+                                {item.label}
+                            </Tag>
+                        </Popover>))
+                    }
+                </div>
                 <div className="chat">
                     {/* <Input type="text" value={question} onChange={inputQuestion} onEnterPress={directChat} placeholder="开始提问吧..." enterkeyhint="done" maxLength={300} autoFocus clearable /> */}
                     <TextArea placeholder='开始提问吧...'
@@ -235,15 +275,15 @@ function ChatComponent(props) {
                         onChange={inputQuestion}
                         rows={1}
                         maxLength={300}
-                        autoSize={{ minRows: 1, maxRows: 8 }} 
+                        autoSize={{ minRows: 1, maxRows: 8 }}
                         showCount
                         autoFocus />
                     {typing && <div className="cancel-container">
-                            <div className='cancel' onClick={onCancelChat}>
-                                <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-                                取消
-                            </div>
-                        </div> 
+                        <div className='cancel' onClick={onCancelChat}>
+                            <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                            取消
+                        </div>
+                    </div>
                     }
                     {typing ?
                         <div className="typing">
@@ -257,13 +297,13 @@ function ChatComponent(props) {
                             <Button className='button' onClick={(e) => directChat(e)}  >
                                 <PlayOutline />
                             </Button>
-                        </div>    
+                        </div>
                     }
                 </div>
             </div>
             <SafeArea position='bottom' />
         </div>
-    </div>)
+    </div >)
 }
 
 export default ChatComponent;
