@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar } from 'antd-mobile'
+import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar, Tag } from 'antd-mobile'
 import { PlayOutline, HeartOutline } from 'antd-mobile-icons'
 import { callBridge } from './ChatServiceBridge';
 import Messages from './Messages';
 import { useLocalStorage } from './utils';
 import ShareLogo from './share.js'
 import './Chat.css';
+import PromotSelect from './PromptElement.js';
 
 function ChatComponent(props) {
     const [userInfo, setUserInfo] = useState()
@@ -19,6 +20,8 @@ function ChatComponent(props) {
     const [answer, setAnswer] = useState();
     const [hasNotice, setHasNotice] = useState('');
     const [abortSignal, setAbortSignal] = useState(null);
+    const [selectingPrompt, setSelectingPrompt] = useState(false);
+    const [selectedPrompt, setSelectedPrompt] = useLocalStorage('chat-selected-prompt', null);
 
     const answerTSRef = useRef();
     answerTSRef.current = answerTS;
@@ -38,6 +41,13 @@ function ChatComponent(props) {
 
     const genRandomMsgId = () => {
         return `msg-${new Date().valueOf()}-${Math.floor(Math.random() * 10)}`;
+    }
+
+    const onChoosePrompt = (val) => {
+        setSelectedPrompt(val)
+        Toast.show({
+            content: `预设模式更新为 - ${val.label}`
+        })
     }
     
     const inputQuestion = val => {
@@ -102,6 +112,7 @@ function ChatComponent(props) {
                     message: question,
                     parentMessageId: msgId,
                     conversationId: convId,
+                    prompt: selectedPrompt?.prompt
                 },
                 onmessage,
                 onopen,
@@ -227,10 +238,13 @@ function ChatComponent(props) {
                 </div>
             </div>
             <div className="bottom-bar">
-
+                <div className="prompt-container" style={{ visibility: typing ? 'hidden' : 'unset' }}>
+                    <Tag className='prompt-tag' onClick={(e) => { setSelectingPrompt(!selectingPrompt); }}>{ selectedPrompt?.label || '默认模式' }</Tag>
+                    { selectingPrompt ? <PromotSelect onConfirm={onChoosePrompt} value={selectedPrompt?.value} visible={selectingPrompt} onClose={() => { setSelectingPrompt(false) }} /> : null }
+                </div>
                 <div className="chat">
                     {/* <Input type="text" value={question} onChange={inputQuestion} onEnterPress={directChat} placeholder="开始提问吧..." enterkeyhint="done" maxLength={300} autoFocus clearable /> */}
-                    <TextArea placeholder='开始提问吧...'
+                    <TextArea placeholder={selectedPrompt?.detail || '开始提问吧'}
                         value={question}
                         onChange={inputQuestion}
                         rows={1}
