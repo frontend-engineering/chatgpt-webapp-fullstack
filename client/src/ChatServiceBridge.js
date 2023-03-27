@@ -7,6 +7,11 @@ export const callBridge = async (options) => {
     if (!data?.message) {
         throw new Error('Empty Input Message');
     }
+    let clientOptions = {};
+    if (data.prompt) {
+        clientOptions.promptPrefix = data.prompt;
+        delete data.prompt;
+    }
     const opts = {
         method: 'POST',
         headers: {
@@ -16,6 +21,7 @@ export const callBridge = async (options) => {
             ...(data || {}),
             // Set stream to true to receive each token as it is generated.
             stream: true,
+            clientOptions,
         }),
     };
 
