@@ -6,7 +6,9 @@ import { UserOutline, EditSOutline } from 'antd-mobile-icons'
 import { fetch as fetchPolyfill } from 'whatwg-fetch'
 import ReactMarkdown from 'react-markdown'
 import { CopyBtn, DeleteBtn } from './Shapes';
-
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import './Messages.css'
 
 const Messages = (props) => {
     console.log('msg got props: ', props);
@@ -34,14 +36,14 @@ const Messages = (props) => {
         }
     }
 
-    const copyItem = (text) => {
+    const copyItem = (text, content = '内容已复制到剪贴板') => {
         return (e) => {
             e.preventDefault();
             e.stopPropagation();
             navigator.clipboard.writeText(text)
             Toast.show({
                 icon: 'success',
-                content: '内容已复制到剪贴板',
+                content: content,
             })
         }
     }
@@ -90,7 +92,35 @@ const Messages = (props) => {
                             }
                         </div>
                         <div className={`bubble`} key={ret.msg}>
-                            <span><ReactMarkdown>{ret.msg}</ReactMarkdown></span>
+                            <span>
+                                <ReactMarkdown
+                                    children={ret.msg}
+                                    components={{
+                                        code({ node, inline, className, children, ...props }) {
+                                            const match = /language-(\w+)/.exec(className || '')
+                                            return !inline && match ? (
+                                                <div>
+                                                    <div className='codebox-handler'><span>{match[1]}</span><span> <CopyBtn onClick={copyItem(String(children).replace(/\n$/, ''), '代码已复制到剪贴板')} /></span></div>
+                                                    <SyntaxHighlighter
+                                                        children={String(children).replace(/\n$/, '')}
+                                                        style={vscDarkPlus}
+                                                        language={match[1]}
+                                                        PreTag="div"
+                                                        customStyle={{
+                                                            margin: '0px'
+                                                        }}
+                                                        {...props}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <code className={className} {...props}>
+                                                    {children}
+                                                </code>
+                                            )
+                                        }
+                                    }}
+                                />
+                            </span>
                             {activeMsgId === ret.id ? <div className='talking-item-btns' style={{justifyContent: ret.type === 'incoming' ? 'flex-end' : 'flex-start' }}>
                                 <CopyBtn onClick={copyItem(ret.msg)} />
                                 <DeleteBtn onClick={deleteItem(ret.id, ret.type)} />
