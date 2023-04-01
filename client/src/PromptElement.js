@@ -1,9 +1,11 @@
-import { fetch } from 'whatwg-fetch'
 import React, { useState, useEffect } from 'react'
-import { Popup, Radio, Space } from 'antd-mobile'
+import { Popup, Radio, Space, Modal, Button } from 'antd-mobile'
+import { EditSOutline } from 'antd-mobile-icons'
 import { DotLoading } from 'antd-mobile'
 import { CheckShieldOutline, CheckShieldFill } from 'antd-mobile-icons'
+import { useNavigate } from 'react-router-dom'
 import { useLocalStorage } from './utils';
+import { DeleteBtn } from './Shapes';
 
 const DefaultPromptList = [
     {
@@ -27,10 +29,11 @@ const DefaultPromptList = [
 ]
 
 export const getPrompts = async () => {
-    return DefaultPromptList;
+    return Promise.resolve(DefaultPromptList)
 }
 
 function PromotSelect(props) {
+    const navigate = useNavigate()
     const [loading, setLoading] = useState(false)
     const [visible, setVisible] = useState(props.visible)
     const [value, setValue] = useState(props.value || 0)
@@ -50,14 +53,30 @@ function PromotSelect(props) {
         }
         setLoading(true)
         getPrompts().then(list => {
-                setPromptList([...list])
-                setCachedTime(new Date().valueOf())
-                setLoading(false)
-            })
-            .catch(err => {
+            setPromptList([...list])
+            setCachedTime(new Date().valueOf())
+            setLoading(false)
+        }).catch(err => {
                 setLoading(false);
             });
     }, [])
+
+    const onRemovePrompt = (index) => {
+        console.log(index,  value)
+        const selectedPrmpt = promptList[index]
+        promptList.splice(index, 1)
+        setPromptList(promptList)
+        setCachedTime(new Date().valueOf())
+        if(selectedPrmpt.value === value) {
+            setValue(0)
+            props.onConfirm(promptList[0]);
+        }
+    }
+
+    const onAddPrompt = (e) => {
+        e.preventDefault()
+        navigate('/addPrompt')
+    }
 
     return (
         <>
@@ -68,59 +87,107 @@ function PromotSelect(props) {
                 showCloseButton
                 position='left'
                 bodyStyle={{ width: '60vw' }}
-            >
-                {
-                    loading ? <div
-                        style={{
-                            background: '#f5f5f5',
-                            height: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            flexDirection: 'column',
-                        }}
-                    >
-                        <DotLoading color="primary" />
-                        加载中
-                    </div> :
-                        <Radio.Group
-                            defaultValue='0'
-                            value={value}
-                            onChange={val => {
-                                setValue(val)
-                                console.log('on value chagned: ', val);
-                                if (props.onConfirm) {
-                                    const data = promptList.find(p => p.value === val);
-                                    props.onConfirm(data);
-                                }
-                                closeView()
-                            }}>
-                            <div style={{
-                                padding: '40px 16px',
-                            }}>
-                                <Space direction='vertical' justify='start' block>
-                                    {promptList.map(p => (<Radio
-                                        key={p.value}
-                                        value={p.value}
-                                        icon={checked =>
-                                            checked ? (
-                                                <CheckShieldFill style={{ color: 'var(--adm-color-primary)' }} />
-                                            ) : (
-                                                <CheckShieldOutline style={{ color: 'var(--adm-color-weak)' }} />
-                                            )
+            >   <div style={{ position: "relative" }}>
+                    <div style={{paddingBottom: '50px'}}> 
+                        {
+                            loading ? <div
+                                style={{
+                                    background: '#f5f5f5',
+                                    height: '100%',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    flexDirection: 'column',
+                                }}
+                            >
+                                <DotLoading color="primary" />
+                                加载中
+                            </div> :
+                                <Radio.Group
+                                    defaultValue='0'
+                                    value={value}
+                                    onChange={val => {
+                                        setValue(val)
+                                        console.log('on value chagned: ', val);
+                                        if (props.onConfirm) {
+                                            const data = promptList.find(p => p.value === val);
+                                            console.log('data:', data)
+                                            props.onConfirm(data);
                                         }
-                                        style={{
-                                            '--icon-size': '22px',
-                                            '--font-size': '16px',
-                                            '--gap': '8px',
-                                        }}>
-                                        {p.label}
-                                    </Radio>))}
-                                </Space>
-                            </div>
-                        </Radio.Group>
-                }
-            </Popup>
+                                        closeView()
+                                    }}>
+                                    <div style={{
+                                        padding: '40px 16px',
+                                    }}>
+                                        <Space direction='vertical' justify='start' block>
+                                            {promptList.map((p, index) => (<Radio
+                                                key={p.value}
+                                                value={p.value}
+                                                icon={checked =>
+                                                    checked ? (
+                                                        <CheckShieldFill style={{ color: 'var(--adm-color-primary)' }} />
+                                                    ) : (
+                                                        <CheckShieldOutline style={{ color: 'var(--adm-color-weak)' }} />
+                                                    )
+                                                }
+                                                style={{
+                                                    '--icon-size': '22px',
+                                                    '--font-size': '16px',
+                                                    '--gap': '8px',
+                                                }}>
+                                                {<span>{p.label}</span>} {p.value !== 0 && <div style={{display:'inline-flex', position: 'absolute', right: '0px', color: 'rgb(18, 150, 219'}}>
+                                                    <span>
+                                                        <EditSOutline onClick={(e) => {
+                                                            e.preventDefault()
+                                                            e.stopPropagation()
+                                                            navigate(`/editPrompt/${p.value}`)
+                                                        }} />
+                                                    </span>
+                                                    <span style={{marginLeft: '5px'}}>
+                                                        <DeleteBtn onClick={async (e) => {
+                                                            e.preventDefault()
+                                                            e.stopPropagation()
+                                                            const result = await Modal.confirm({
+                                                                closeOnAction: true,
+                                                                content: `删除${p.label}场景`,
+                                                                actions: [
+                                                                    {
+                                                                        key: 'cancel',
+                                                                        text: '取消',
+                                                                    },
+                                                                    {
+                                                                        key: 'confirm',
+                                                                        text: '确定',
+                                                                        primary: true,
+                                                                    },
+                                                                ],
+                                                                style: { display: 'flex', flexDirection: 'row' }
+                                                            })
+                                                            if (result) {
+                                                                onRemovePrompt(index)
+                                                            }
+                                                        }} />
+                                                    </span>
+                                                </div>}
+                                            </Radio>))}
+                                        </Space>
+                                    </div>
+                                </Radio.Group>
+                        }
+                    </div>
+                    <div style={{ position: 'fixed', bottom: 0, width: '100%', height: '50px' }}>
+                        <div style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'}}>
+                        <Button style={{width: '90%'}}  block shape='rounded' color='primary' onClick={(e) => onAddPrompt(e)}>
+                            新增规则
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </Popup>
 
         </>
 
