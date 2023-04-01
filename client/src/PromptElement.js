@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Popup, Radio, Space, Modal, Button } from 'antd-mobile'
+import { Popup, Radio, Space, Button, Collapse, SafeArea } from 'antd-mobile'
 import { EditSOutline } from 'antd-mobile-icons'
 import { DotLoading } from 'antd-mobile'
 import { CheckShieldOutline, CheckShieldFill } from 'antd-mobile-icons'
 import { useNavigate } from 'react-router-dom'
 import { useLocalStorage } from './utils';
-import { DeleteBtn } from './Shapes';
+import './PromptElement.css'
 
 const DefaultPromptList = [
     {
@@ -25,6 +25,12 @@ const DefaultPromptList = [
         "detail": "个人最常使用的 prompt，可用于改进文字段落和句式",
         "value": 2,
         "prompt": "As a writing improvement assistant, your task is to improve the spelling, grammar, clarity, concision, and overall readability of the text provided, while breaking down long sentences, reducing repetition, and providing suggestions for improvement. Please provide only the corrected Chinese version of the text and avoid including explanations. Please begin by editing the following text:"
+    },
+    {
+        "label": "周报生成",
+        "detail": "根据日常工作内容，提取要点并适当扩充，以生成周报",
+        "value": 3,
+        "prompt": "Using the provided text below as the basis for a weekly report in Chinese, generate a concise summary that highlights the most important points. The report should be written in markdown format and should be easily readable and understandable for a general audience. In particular, focus on providing insights and analysis that would be useful to stakeholders and decision-makers. You may also use any additional information or sources as necessary. Please begin by editing the following text:"
     }
 ]
 
@@ -39,6 +45,7 @@ function PromotSelect(props) {
     const [value, setValue] = useState(props.value || 0)
     const [promptList, setPromptList] = useLocalStorage('promps-list-lcal', []);
     const [cachedTime, setCachedTime] = useLocalStorage('promps-list-lcal-time', 0);
+    const [customPromptList] = useLocalStorage('custom-promps-list-lcal', []);
 
     const closeView = () => {
         console.log('closing view');
@@ -61,18 +68,6 @@ function PromotSelect(props) {
             });
     }, [])
 
-    const onRemovePrompt = (index) => {
-        console.log(index,  value)
-        const selectedPrmpt = promptList[index]
-        promptList.splice(index, 1)
-        setPromptList(promptList)
-        setCachedTime(new Date().valueOf())
-        if(selectedPrmpt.value === value) {
-            setValue(0)
-            props.onConfirm(promptList[0]);
-        }
-    }
-
     const onAddPrompt = (e) => {
         e.preventDefault()
         navigate('/addPrompt')
@@ -87,8 +82,8 @@ function PromotSelect(props) {
                 showCloseButton
                 position='left'
                 bodyStyle={{ width: '60vw' }}
-            >   <div style={{ position: "relative" }}>
-                    <div style={{paddingBottom: '50px'}}> 
+            > 
+                <div style={{ position: "relative", paddingBottom: '50px', height: '100vh', overflow: 'scroll' }}> 
                         {
                             loading ? <div
                                 style={{
@@ -103,89 +98,105 @@ function PromotSelect(props) {
                                 <DotLoading color="primary" />
                                 加载中
                             </div> :
-                                <Radio.Group
-                                    defaultValue='0'
-                                    value={value}
-                                    onChange={val => {
-                                        setValue(val)
-                                        console.log('on value chagned: ', val);
-                                        if (props.onConfirm) {
-                                            const data = promptList.find(p => p.value === val);
-                                            console.log('data:', data)
-                                            props.onConfirm(data);
-                                        }
-                                        closeView()
-                                    }}>
-                                    <div style={{
-                                        padding: '40px 16px',
-                                    }}>
-                                        <Space direction='vertical' justify='start' block>
-                                            {promptList.map((p, index) => (<Radio
-                                                key={p.value}
-                                                value={p.value}
-                                                icon={checked =>
-                                                    checked ? (
-                                                        <CheckShieldFill style={{ color: 'var(--adm-color-primary)' }} />
-                                                    ) : (
-                                                        <CheckShieldOutline style={{ color: 'var(--adm-color-weak)' }} />
-                                                    )
-                                                }
-                                                style={{
-                                                    '--icon-size': '22px',
-                                                    '--font-size': '16px',
-                                                    '--gap': '8px',
+                                <div className='prompt-list-container'>
+                                    <Collapse defaultActiveKey={['1','2']}>
+                                        <Collapse.Panel key='1' title='默认场景'>
+                                            <Radio.Group
+                                                defaultValue='0'
+                                                value={value}
+                                                onChange={val => {
+                                                    setValue(val)
+                                                    console.log('on value chagned: ', val);
+                                                    if (props.onConfirm) {
+                                                        const data = promptList.find(p => p.value === val);
+                                                        props.onConfirm(data);
+                                                    }
+                                                    closeView()
                                                 }}>
-                                                {<span>{p.label}</span>} {p.value !== 0 && <div style={{display:'inline-flex', position: 'absolute', right: '0px', color: 'rgb(18, 150, 219'}}>
-                                                    <span>
-                                                        <EditSOutline onClick={(e) => {
-                                                            e.preventDefault()
-                                                            e.stopPropagation()
-                                                            navigate(`/editPrompt/${p.value}`)
-                                                        }} />
-                                                    </span>
-                                                    <span style={{marginLeft: '5px'}}>
-                                                        <DeleteBtn onClick={async (e) => {
-                                                            e.preventDefault()
-                                                            e.stopPropagation()
-                                                            const result = await Modal.confirm({
-                                                                closeOnAction: true,
-                                                                content: `删除${p.label}场景`,
-                                                                actions: [
-                                                                    {
-                                                                        key: 'cancel',
-                                                                        text: '取消',
-                                                                    },
-                                                                    {
-                                                                        key: 'confirm',
-                                                                        text: '确定',
-                                                                        primary: true,
-                                                                    },
-                                                                ],
-                                                                style: { display: 'flex', flexDirection: 'row' }
-                                                            })
-                                                            if (result) {
-                                                                onRemovePrompt(index)
+                                               
+                                                    <div className='prompt-block'>
+                                                        <Space direction='vertical' justify='start' block>
+                                                            {promptList.map((p) => (<Radio
+                                                                key={p.value}
+                                                                value={p.value}
+                                                                icon={checked =>
+                                                                    checked ? (
+                                                                        <CheckShieldFill style={{ color: 'var(--adm-color-primary)' }} />
+                                                                    ) : (
+                                                                        <CheckShieldOutline style={{ color: 'var(--adm-color-weak)' }} />
+                                                                    )
+                                                                }
+                                                                style={{
+                                                                    '--icon-size': '22px',
+                                                                    '--font-size': '16px',
+                                                                    '--gap': '8px',
+                                                                }}>
+                                                                    <span>{p.label}</span>
+                                                            </Radio>))}
+                                                        </Space>
+                                                    </div>
+                                            </Radio.Group>
+                                        </Collapse.Panel>
+                                        {customPromptList.length > 0 && <Collapse.Panel key='2' title='自定义场景'>
+                                            <Radio.Group
+                                            defaultValue='0'
+                                            value={value}
+                                            onChange={val => {
+                                                setValue(val)
+                                                console.log('on value chagned: ', val);
+                                                if (props.onConfirm) {
+                                                    const data = customPromptList.find(p => p.value === val);
+                                                    console.log('data:', data)
+                                                    props.onConfirm(data);
+                                                }
+                                                closeView()
+                                            }}>
+                                            <div className='prompt-block'>
+                                                    <Space direction='vertical' justify='start' block>
+                                                        {customPromptList.map((p) => (<Radio
+                                                            key={p.value}
+                                                            value={p.value}
+                                                            icon={checked =>
+                                                                checked ? (
+                                                                    <CheckShieldFill style={{ color: 'var(--adm-color-primary)' }} />
+                                                                ) : (
+                                                                    <CheckShieldOutline style={{ color: 'var(--adm-color-weak)' }} />
+                                                                )
                                                             }
-                                                        }} />
-                                                    </span>
-                                                </div>}
-                                            </Radio>))}
-                                        </Space>
-                                    </div>
-                                </Radio.Group>
+                                                            style={{
+                                                                '--icon-size': '22px',
+                                                                '--font-size': '16px',
+                                                                '--gap': '8px',
+                                                            }}>
+                                                                <span>{p.label}</span>
+                                                                <span style={{position: 'absolute', right: '0', color: '#999999'}}>
+                                                                    <EditSOutline onClick={(e) => {
+                                                                        e.preventDefault()
+                                                                        e.stopPropagation()
+                                                                        navigate(`/editPrompt/${p.value}`)
+                                                                    }} />
+                                                                </span>
+                                                        </Radio>))}
+                                                    </Space>
+                                                </div>
+                                        </Radio.Group>
+                                    </Collapse.Panel>}
+                                </Collapse>
+                            </div>
                         }
                     </div>
-                    <div style={{ position: 'fixed', bottom: 0, width: '100%', height: '50px' }}>
+                  
+                    <div style={{ position: 'fixed', bottom: 0, width: '100%', height: '50px', background: '#fff' }}>
                         <div style={{
                             width: '100%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center'}}>
                         <Button style={{width: '90%'}}  block shape='rounded' color='primary' onClick={(e) => onAddPrompt(e)}>
-                            新增规则
+                            新增场景
                         </Button>
                     </div>
-                </div>
+                    <SafeArea position='bottom' />
             </div>
         </Popup>
 

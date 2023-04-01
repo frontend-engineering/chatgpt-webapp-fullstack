@@ -1,5 +1,5 @@
-import React from 'react'
-import { SafeArea, Form, Input, Button, TextArea, NavBar, Toast, Modal } from 'antd-mobile'
+import React, { useState } from 'react'
+import { SafeArea, Form, Input, Button, TextArea, NavBar, Toast, ActionSheet } from 'antd-mobile'
 import { useLocalStorage } from './utils'
 import './CreatePrompt.css'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
@@ -8,16 +8,27 @@ function AddPrompt(props) {
     const navigate = useNavigate()
     const { pathname } = useLocation()
     const { value } = useParams()
-    const [promptList, setPromptList] = useLocalStorage('promps-list-lcal', [])
-    const [cachedTime, setCachedTime] = useLocalStorage('promps-list-lcal-time', 0)
+    const [visibleDelete, setVisibleDelete] = useState(false)
+    const [defaultPromptList] = useLocalStorage('promps-list-lcal', []);
+    const [promptList, setPromptList] = useLocalStorage('custom-promps-list-lcal', [])
+    const [cachedTime, setCachedTime] = useLocalStorage('custom-promps-list-lcal-time', 0)
     const [selectedPrompt, setSelectedPrompt] = useLocalStorage('chat-selected-prompt', null);
     const editingPrompt = promptList.find((prompt) => prompt.value.toString() === value)
     const [form] = Form.useForm()
 
+    const actions = [
+        {
+            text: '确认',
+            key: 'delete',
+            bold: true,
+            onClick: () => onRemovePrompt()
+        }
+    ]
+
     const onAddPrompt = () => {
         if (form.getFieldValue('label') && form.getFieldValue('prompt')) {
             const newPrompt = form.getFieldsValue()
-            newPrompt['value'] = promptList.length
+            newPrompt['value'] = `${newPrompt.label}${promptList.length}`
             setPromptList(promptList.concat([newPrompt]))
             setCachedTime(new Date().valueOf())
             setSelectedPrompt(newPrompt)
@@ -34,7 +45,9 @@ function AddPrompt(props) {
     const onRemovePrompt = () => {
         setPromptList(promptList.filter((prompt) => prompt.value !== editingPrompt.value))
         setCachedTime(new Date().valueOf())
-        setSelectedPrompt(promptList[0])
+        if (editingPrompt.value === selectedPrompt.value) {
+            setSelectedPrompt(defaultPromptList[0])
+        }
         navigate('/build')
     }
 
@@ -74,29 +87,9 @@ function AddPrompt(props) {
                 <div style={{ background: '#ace0ff' }}>
                     <SafeArea position='top' />
                 </div>
-                <NavBar onBack={() => { navigate(-1) }} right={pathname !== '/addPrompt' && <div onClick={async (e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    const result = await Modal.confirm({
-                        closeOnAction: true,
-                        content: `删除${editingPrompt.label}场景`,
-                        actions: [
-                            {
-                                key: 'cancel',
-                                text: '取消',
-                            },
-                            {
-                                key: 'confirm',
-                                text: '确定',
-                                primary: true,
-                            },
-                        ],
-                        style: { display: 'flex', flexDirection: 'row' },
-                    })
-                    if (result) {
-                        onRemovePrompt()
-                    }
-                }}>删除规则</div>}>编辑预设场景</NavBar>
+                <NavBar onBack={() => { navigate(-1) }} right={pathname !== '/addPrompt' && <div onClick={() => setVisibleDelete(true)}>删除场景</div>}>
+                    {pathname === '/addPrompt' ? '新增' : '编辑'}预设场景
+                </NavBar>
                 <Form form={form} layout='vertical' mode='card' footer={
                     <Button className='btn' block type='submit' color='primary' size='large' onClick={onSubmit}>
                         提交
@@ -122,6 +115,13 @@ function AddPrompt(props) {
                     </Form.Item>
                 </Form>
             </div>
+            <ActionSheet
+                visible={visibleDelete}
+                actions={actions}
+                onClose={() => setVisibleDelete(setVisibleDelete)}
+                extra={<div>删除<span style={{ color: '#79C7C5', fontSize: '15px'}}>{editingPrompt ? editingPrompt.label : ''}</span>场景</div>}
+                cancelText='取消'
+            />
         </>
     )
 }
