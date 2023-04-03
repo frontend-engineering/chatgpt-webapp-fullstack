@@ -8,8 +8,10 @@ function App() {
       <Router>
         <Routes>
           <Route path="/build" element={<Chat />} />
-          <Route path="/addPrompt/" element={<AddPrompt />} />
-          <Route path="/editPrompt/:value" element={<AddPrompt />} />
+          <Route path="/build/editPrompt/">
+            <Route index element={<AddPrompt />} />
+            <Route path=":value" element={<AddPrompt />} />
+          </Route>
         </Routes>
       </Router>
     </div>

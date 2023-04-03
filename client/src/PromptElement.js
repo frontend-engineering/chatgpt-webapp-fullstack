@@ -70,7 +70,7 @@ function PromotSelect(props) {
 
     const onAddPrompt = (e) => {
         e.preventDefault()
-        navigate('/addPrompt')
+        navigate('/build/editPrompt')
     }
 
     return (
@@ -173,7 +173,7 @@ function PromotSelect(props) {
                                                                     <EditSOutline onClick={(e) => {
                                                                         e.preventDefault()
                                                                         e.stopPropagation()
-                                                                        navigate(`/editPrompt/${p.value}`)
+                                                                        navigate(`/build/editPrompt/${p.value}`)
                                                                     }} />
                                                                 </span>
                                                         </Radio>))}

@@ -6,6 +6,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 
 function AddPrompt(props) {
     const navigate = useNavigate()
+    const defaultEditPath = '/build/editPrompt'
     const { pathname } = useLocation()
     const { value } = useParams()
     const [visibleDelete, setVisibleDelete] = useState(false)
@@ -74,7 +75,7 @@ function AddPrompt(props) {
     }
 
     const onSubmit = () => {
-        if (pathname === '/addPrompt') {
+        if (pathname === defaultEditPath) {
             onAddPrompt()
         } else {
             onEditPrompt()
@@ -87,14 +88,14 @@ function AddPrompt(props) {
                 <div style={{ background: '#ace0ff' }}>
                     <SafeArea position='top' />
                 </div>
-                <NavBar onBack={() => { navigate(-1) }} right={pathname !== '/addPrompt' && <div onClick={() => setVisibleDelete(true)}>删除场景</div>}>
-                    {pathname === '/addPrompt' ? '新增' : '编辑'}预设场景
+                <NavBar onBack={() => { navigate(-1) }} right={pathname !== defaultEditPath && <div onClick={() => setVisibleDelete(true)}>删除场景</div>}>
+                    {pathname === defaultEditPath ? '新增' : '编辑'}预设场景
                 </NavBar>
                 <Form form={form} layout='vertical' mode='card' footer={
                     <Button className='btn' block type='submit' color='primary' size='large' onClick={onSubmit}>
                         提交
                     </Button>}
-                    initialValues={pathname === '/addPrompt' ? { label: '', detail: '', prompt: '' } : { ...editingPrompt }}
+                    initialValues={pathname === defaultEditPath ? { label: '', detail: '', prompt: '' } : { ...editingPrompt }}
                 >
                     <Form.Header>预设场景</Form.Header>
                     <Form.Item name="label" label='场景名称' rules={[{ required: true, message: '场景名称不能为空' }]}>
