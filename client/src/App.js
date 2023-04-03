@@ -7,10 +7,11 @@ function App() {
     <div className="App">
       <Router>
         <Routes>
-          <Route path="/build" element={<Chat />} />
-          <Route path="/build/editPrompt/">
-            <Route index element={<AddPrompt />} />
-            <Route path=":value" element={<AddPrompt />} />
+          <Route path="/build">
+            <Route index element={<Chat />} />
+            <Route path='editPrompt' element={<AddPrompt />}>
+              <Route path=':value' element={<AddPrompt />} />
+            </Route>
           </Route>
         </Routes>
       </Router>
