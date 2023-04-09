@@ -36,3 +36,7 @@
     transform: rotate(360deg);
   }
 }
+
+:root:root {
+  --adm-color-primary: #79C7C5;
+}
