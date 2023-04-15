@@ -109,7 +109,7 @@ npm run start
 
  或加交流群
  <p align="center">
-    <img width="248px" src="/assets/group-qr-4-16.jpeg" />
+    <img width="248px" src="/assets/group-qr-4-22.jpeg" />
   </p>
 
 ## License
