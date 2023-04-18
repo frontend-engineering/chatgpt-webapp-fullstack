@@ -32,7 +32,8 @@ export default {
         // chatGptLabel: 'ChatGPT',
         // (Optional) Set to true to enable `console.debug()` logging
         // A proxy string like "http://<ip>:<port>"
-        proxy: process.env.PROXY || '',
+        // export HTTP_PROXY=http://127.0.0.1:58591; export HTTPS_PROXY=http://127.0.0.1:58591; export ALL_PROXY=socks5://127.0.0.1:51837
+        proxy: process.env.PROXY || 'http://127.0.0.1:58591',
         debug: false,
     },
     // Options for the Bing client

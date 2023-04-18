@@ -92,7 +92,10 @@
 
 .avatar p {
     color: #F9FBFF;
-    margin: 7px 12px;
+    line-height: 35px;
+    box-sizing: border-box;
+    margin: 0;
+    text-align: center;
 }
 
 .avatar img,svg {

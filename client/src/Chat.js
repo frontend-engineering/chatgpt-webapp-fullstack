@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar, Tag } from 'antd-mobile'
 import { PlayOutline, HeartOutline } from 'antd-mobile-icons'
+import Cashier from '@cashier/web';
 import { callBridge } from './ChatServiceBridge';
 import Messages from './Messages';
 import { useLocalStorage } from './utils';
@@ -8,8 +9,11 @@ import ShareLogo from './share.js'
 import './Chat.css';
 import PromotSelect from './PromptElement.js';
 
+const appId = 'LHFZ'
+const appToken = '1fZiUmYOfeH8ufz77evr4Owh'
+
 function ChatComponent(props) {
-    const [userInfo, setUserInfo] = useState()
+    const [loginState, setLoginState] = useState(null)
     const [question, setQuestion] = useState("");
     const [outMsgs, setOutMsgs] = useLocalStorage('chat-out-msgs', []);
     const [retMsgs, setRetMsgs] = useLocalStorage('chat-ret-msgs', []);
@@ -23,6 +27,17 @@ function ChatComponent(props) {
     const [selectingPrompt, setSelectingPrompt] = useState(false);
     const [selectedPrompt, setSelectedPrompt] = useLocalStorage('chat-selected-prompt', null);
 
+    const sdkInsta = useMemo(() => {
+        return new Cashier({
+            // 应用 ID
+            appId,
+            appToken,
+            domain: 'http://localhost:3333',
+            pageDomain: 'http://localhost:3002',
+            mobile: true,
+        });
+    }, []);
+
     const answerTSRef = useRef();
     answerTSRef.current = answerTS;
 
@@ -33,6 +48,21 @@ function ChatComponent(props) {
     abortSignalRef.current = abortSignal;
 
     const messagesEndRef = useRef(null)
+
+    const getLoginState = useCallback(async () => {
+        let state = await sdkInsta.getUserInfo();
+        console.log('get loginState: ', state)
+        if (!state) {
+            state = await sdkInsta.login()
+        }
+        setLoginState(state);
+    }, [sdkInsta]);
+
+    const getLoginTokens = useCallback(async () => {
+        let tokens = await sdkInsta.getTokens();
+        console.log('get tokens: ', tokens)
+        return tokens;
+    }, [sdkInsta]); 
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -97,18 +127,25 @@ function ChatComponent(props) {
             return;
         }
 
+        if (!loginState) {
+            Toast.show({
+                content: '请先登录'
+            })
+            return;
+        }
+
         setQuestion('');
         setOutMsgs([...outMsgs, { id: genRandomMsgId(), msg: question, timestamp: new Date().valueOf() }])
-        if (typeof cnt === 'number') {
-            setUserInfo(userInfo)
-        }
 
         setAbortSignal(null);
         setTyping(true);
         // 向云服务发起调用
         try {
+            const tokens = await getLoginTokens();
             const callRes = await callBridge({
                 data: {
+                    uid: loginState?.id,
+                    at: tokens.accessToken,
                     message: question,
                     parentMessageId: msgId,
                     conversationId: convId,
@@ -198,6 +235,20 @@ function ChatComponent(props) {
     }, [retMsgs, outMsgs]);
 
     useEffect(() => {
+        if (sdkInsta) {
+            sdkInsta.init()
+                .then(() => {
+                    return getLoginState()
+                })
+                .then(info => {
+                    if (!info) {
+                        sdkInsta.login();
+                    }
+                })
+        }
+    }, [sdkInsta, getLoginState])
+
+    useEffect(() => {
         setTimeout(() => {
             scrollToBottom();
         }, 300)
@@ -215,7 +266,7 @@ function ChatComponent(props) {
         <div className="chatbox">
             <div className="top-bar">
             <div className="avatar">
-                <p>W</p>
+                <p>{loginState?.name?.toUpperCase().slice(0, 2) || 'W'}</p>
             </div>
             <div className="name">WebInfra</div>
             <div className="menu">
@@ -231,7 +282,7 @@ function ChatComponent(props) {
                     <Messages
                         retMsgs={[ ...retMsgs, answer ? { msg: answer, timestamp: answerTS } : null ].map(item => { item && (item.type = 'incoming'); return item })}
                         outMsgs={outMsgs.map(item => { item && (item.type = 'outgoing'); return item })}
-                        userInfo={userInfo}
+                        userInfo={loginState}
                         onItemDeleted={deleteItem}
                         onEdit={editItem} />
                     <div className='chat-bottom-line' ref={messagesEndRef}></div>

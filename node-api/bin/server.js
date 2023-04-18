@@ -11,6 +11,7 @@ import { KeyvFile } from 'keyv-file';
 import ChatGPTClient from '../src/ChatGPTClient.js';
 import ChatGPTBrowserClient from '../src/ChatGPTBrowserClient.js';
 import BingAIClient from '../src/BingAIClient.js';
+import { checkLimit, userAmountFeedback } from '../src/Auth.js';
 // import { ProxyAgent } from 'undici';
 
 const BillingURL = 'https://api.openai.com/dashboard/billing/credit_grants';
@@ -73,7 +74,6 @@ server.get('/', async (req, res) => {
     res.send('ok');
 });
 
-
 server.post('/api/usage', async (request, reply) => {
     const { hash } = request.body || {};
     if (hash !== 'magic-master') {
@@ -134,8 +134,48 @@ server.post('/api/chat', async (request, reply) => {
     console.log('api chat message - ', JSON.stringify(request.body));
 
     const body = request.body || {};
-    const abortController = new AbortController();
+    const { uid, question, at } = body;
 
+    try {
+        if (!uid) {
+            throw new Error('no uid found');
+        }
+
+        const result = await checkLimit(uid, at, question)
+            .catch((err) => {
+                console.log('check limit exception: ', err);
+                return {
+                    success: false,
+                    message: err?.message,
+                };
+            });
+        console.log('apply result: ', JSON.stringify(result));
+
+        if (!result.success) {
+            reply.send(result);
+            return;
+        }
+        const amountUpdated = await userAmountFeedback({
+            uid,
+            token: at,
+            action: 'decrement',
+            count: 1,
+        });
+        console.log('amount update result: ', JSON.stringify(amountUpdated));
+        if (!result.success) {
+            res.send(result);
+            return;
+        }
+    } catch (error) {
+        reply.send({
+            success: false,
+            code: error?.code || 500,
+            message: error?.message || '数据库查询失败',
+        });
+        return;
+    }
+
+    const abortController = new AbortController();
     reply.raw.on('close', () => {
         if (abortController.signal.aborted === false) {
             abortController.abort();
@@ -217,6 +257,15 @@ server.post('/api/chat', async (request, reply) => {
     } else if (settings.apiOptions?.debug) {
         console.debug(error);
     }
+
+    // Feedback to user profile
+    userAmountFeedback({
+        uid,
+        token: at,
+        action: 'increment',
+        count: 1,
+    });
+    // await User.increment({ count: 1 }, { where: { openId } }) //  错误返回不计算Count
     const message = error?.data?.message || `There was an error communicating with ${clientToUse === 'bing' ? 'Bing' : 'ChatGPT'}.`;
     if (body.stream === true) {
         reply.sse({
@@ -232,6 +281,50 @@ server.post('/api/chat', async (request, reply) => {
         return;
     }
     reply.code(code).send({ error: message });
+});
+
+server.post('/api/chat-feedback', async (request, reply) => {
+    console.log('user request feedback', JSON.stringify(request.body));
+    const {
+        uid,
+        id,
+        success,
+        at,
+    } = request.body || {};
+
+    try {
+        if (!uid) {
+            throw new Error('no uid found');
+        }
+        if (!id) {
+            throw new Error('no request id');
+        }
+        if (!success) {
+            // 返还用户消耗的count
+            const amountResp = await userAmountFeedback({
+                uid,
+                token: at,
+                action: 'increment',
+                count: 1,
+            });
+            // await User.increment({ count: 1 }, { where: { openId } }) //  错误返回不计算Count
+            console.log('amount feedback resp : ', amountResp);
+            reply.send({
+                success: true,
+                resp: amountResp,
+            });
+        }
+
+        // TODO: Answer record update
+        reply.send({
+            success: true,
+        });
+    } catch (error) {
+        reply.code(500).send({
+            code: error?.code || 500,
+            message: error?.message || '数据库查询失败',
+        });
+    }
 });
 
 const port = settings.apiOptions?.port || settings.port || 3000;

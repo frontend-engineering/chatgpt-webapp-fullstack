@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "https://chat.webinfra.cloud/build",
   "dependencies": {
+    "@cashier/web": "^0.2.15",
     "@fortaine/fetch-event-source": "^3.0.6",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
