@@ -8,9 +8,8 @@ import { useLocalStorage } from './utils';
 import ShareLogo from './share.js'
 import './Chat.css';
 import PromotSelect from './PromptElement.js';
+import { appId, appToken } from './config.js';
 
-const appId = 'LHFZ'
-const appToken = '1fZiUmYOfeH8ufz77evr4Owh'
 
 function ChatComponent(props) {
     const [loginState, setLoginState] = useState(null)
