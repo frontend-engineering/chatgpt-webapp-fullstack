@@ -18,9 +18,10 @@ dotenv.config();
 
 const BillingURL = 'https://api.openai.com/dashboard/billing/credit_grants';
 
-const arg = process.argv.find((arg) => arg.startsWith('--settings'));
+const arg = process.argv.find(args => args.startsWith('--settings'));
 let settingPath;
 if (arg) {
+    // eslint-disable-next-line prefer-destructuring
     settingPath = arg.split('=')[1];
 } else {
     settingPath = './settings.js';
@@ -137,14 +138,19 @@ server.post('/api/chat', async (request, reply) => {
 
     const body = request.body || {};
     const { uid, question, at } = body;
-
+    let isCharged = false; // 是否消耗付费额度
     try {
         console.log('enable auth: ', process.env.ENABLE_AUTH);
         if (process.env.ENABLE_AUTH === 'WebInfra') {
             if (!uid) {
                 throw new Error('no uid found');
             }
-            const result = await checkLimit(uid, at, question)
+            const result = await checkLimit({
+                uid,
+                token: at,
+                question,
+                cache: conversationsCache,
+            })
                 .catch((err) => {
                     console.log('check limit exception: ', err);
                     return {
@@ -158,10 +164,7 @@ server.post('/api/chat', async (request, reply) => {
                 reply.code(401).send(result);
                 return;
             }
-            if (!result.success) {
-                res.send(result);
-                return;
-            }
+            isCharged = result.data.charged;
         } else {
             console.log('Skip auth....');
         }
@@ -246,8 +249,8 @@ server.post('/api/chat', async (request, reply) => {
             userAmountFeedback({
                 uid,
                 token: at,
-                action: 'decrement',
-                count: 1,
+                charged: isCharged,
+                cache: conversationsCache,
             }).then((amountUpdated) => {
                 console.log('amount update result: ', JSON.stringify(amountUpdated));
             });
