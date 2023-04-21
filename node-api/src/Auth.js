@@ -1,9 +1,10 @@
 import './fetch-polyfill.js';
 
-const DomainHost = 'http://localhost:3333';
+// const DomainHost = 'http://localhost:3333';
+const DomainHost = 'https://prod-sdk-api.my.webinfra.cloud';
 
-export const checkLimit = async (uid, token) => {
-    console.log('checking limit', uid, token);
+export const checkLimit = async (uid, token, question) => {
+    console.log('checking limit', uid, token, question);
 
     const sdkHost = `${DomainHost}/api/sdk/customer`;
     return fetch(sdkHost, {
