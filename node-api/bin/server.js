@@ -155,13 +155,6 @@ server.post('/api/chat', async (request, reply) => {
             reply.send(result);
             return;
         }
-        const amountUpdated = await userAmountFeedback({
-            uid,
-            token: at,
-            action: 'decrement',
-            count: 1,
-        });
-        console.log('amount update result: ', JSON.stringify(amountUpdated));
         if (!result.success) {
             res.send(result);
             return;
@@ -243,6 +236,15 @@ server.post('/api/chat', async (request, reply) => {
         if (body.stream === true) {
             reply.sse({ event: 'result', id: '', data: JSON.stringify(result) });
             reply.sse({ id: '', data: '[DONE]' });
+            // only update user account after request success
+            userAmountFeedback({
+                uid,
+                token: at,
+                action: 'decrement',
+                count: 1,
+            }).then((amountUpdated) => {
+                console.log('amount update result: ', JSON.stringify(amountUpdated));
+            });
             await nextTick();
             reply.raw.end();
             return;
@@ -258,13 +260,13 @@ server.post('/api/chat', async (request, reply) => {
         console.debug(error);
     }
 
-    // Feedback to user profile
-    userAmountFeedback({
-        uid,
-        token: at,
-        action: 'increment',
-        count: 1,
-    });
+    // // Feedback to user profile
+    // userAmountFeedback({
+    //     uid,
+    //     token: at,
+    //     action: 'increment',
+    //     count: 1,
+    // });
     // await User.increment({ count: 1 }, { where: { openId } }) //  错误返回不计算Count
     const message = error?.data?.message || `There was an error communicating with ${clientToUse === 'bing' ? 'Bing' : 'ChatGPT'}.`;
     if (body.stream === true) {
