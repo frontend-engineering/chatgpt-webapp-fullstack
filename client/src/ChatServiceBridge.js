@@ -34,13 +34,14 @@ export const callBridge = async (options) => {
         if (getSignal) {
             getSignal(controller);
         }
-        await fetchEventSource(`${HOST_URL}/api/chat`, {
+        const upstreamResp = await fetchEventSource(`${HOST_URL}/api/chat`, {
             ...opts,
             signal: controller.signal,
-            onopen(response) {
+            async onopen(response) {
                 console.log('internal open: ', response);
+                // console.log('resp: ', await response.json())
                 if (response.status === 200) {
-                    onopen()
+                    onopen(response)
                     return;
                 }
                 const err = new Error(`Failed to send message. HTTP ${response.status} - ${response.statusText}`);
@@ -101,7 +102,8 @@ export const callBridge = async (options) => {
                 reply += JSON.parse(message.data);
             },
         });
-        console.log(reply);
+        console.log('reply contents: ', reply);
+        console.log('upstream resp: ', upstreamResp);
 
         return {
             response: reply,

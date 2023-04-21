@@ -8,7 +8,7 @@ import { useLocalStorage } from './utils';
 import ShareLogo from './share.js'
 import './Chat.css';
 import PromotSelect from './PromptElement.js';
-import { appId, appToken } from './config.js';
+import { appId, appToken, enableAuth } from './config.js';
 
 
 function ChatComponent(props) {
@@ -27,6 +27,10 @@ function ChatComponent(props) {
     const [selectedPrompt, setSelectedPrompt] = useLocalStorage('chat-selected-prompt', null);
 
     const sdkInsta = useMemo(() => {
+        if (!enableAuth) {
+            console.log('skip auth');
+            return null;
+        }
         return new Cashier({
             // 应用 ID
             appId,
@@ -49,6 +53,7 @@ function ChatComponent(props) {
     const messagesEndRef = useRef(null)
 
     const getLoginState = useCallback(async () => {
+        if (!sdkInsta) return;
         let state = await sdkInsta.getUserInfo();
         console.log('get loginState: ', state)
         if (!state) {
@@ -58,6 +63,7 @@ function ChatComponent(props) {
     }, [sdkInsta]);
 
     const getLoginTokens = useCallback(async () => {
+        if (!sdkInsta) return;
         let tokens = await sdkInsta.getTokens();
         console.log('get tokens: ', tokens)
         return tokens;
@@ -89,13 +95,13 @@ function ChatComponent(props) {
         scrollToBottom()
     }
 
-    const onopen = () => {
-        console.log('opened');
+    const onopen = async () => {
+        console.log('chat on open');
         setAnswerTS(new Date().valueOf());
     }
 
     const onclose = () => {
-        console.log('closed ', answerRef.current)
+        console.log('chat on close ', answerRef.current)
         if (answerRef.current) {
             setRetMsgs([...retMsgs, { id: genRandomMsgId(), msg: answerRef.current, timestamp: answerTSRef.current }])
             setAnswer('')
@@ -104,7 +110,7 @@ function ChatComponent(props) {
         }
     }
     const onerror = (message) => {
-        console.log("error: ", answerRef.current);
+        console.log("chat on error: ", answerRef.current);
         if (answerRef.current) {
             if (answerRef.current) {
                 setRetMsgs([...retMsgs, { id: genRandomMsgId(), msg: answerRef.current + '...', timestamp: answerTSRef.current }])
@@ -144,7 +150,7 @@ function ChatComponent(props) {
             const callRes = await callBridge({
                 data: {
                     uid: loginState?.id,
-                    at: tokens.accessToken,
+                    at: tokens?.accessToken,
                     message: question,
                     parentMessageId: msgId,
                     conversationId: convId,

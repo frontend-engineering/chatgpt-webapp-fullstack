@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* eslint-disable no-undef */
+import * as dotenv from 'dotenv';
 import fastify from 'fastify';
 import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
@@ -13,6 +14,7 @@ import ChatGPTBrowserClient from '../src/ChatGPTBrowserClient.js';
 import BingAIClient from '../src/BingAIClient.js';
 import { checkLimit, userAmountFeedback } from '../src/Auth.js';
 // import { ProxyAgent } from 'undici';
+dotenv.config();
 
 const BillingURL = 'https://api.openai.com/dashboard/billing/credit_grants';
 
@@ -137,27 +139,31 @@ server.post('/api/chat', async (request, reply) => {
     const { uid, question, at } = body;
 
     try {
-        if (!uid) {
-            throw new Error('no uid found');
-        }
+        console.log('enable auth: ', process.env.ENABLE_AUTH);
+        if (process.env.ENABLE_AUTH === 'WebInfra') {
+            if (!uid) {
+                throw new Error('no uid found');
+            }
+            const result = await checkLimit(uid, at, question)
+                .catch((err) => {
+                    console.log('check limit exception: ', err);
+                    return {
+                        success: false,
+                        message: err?.message,
+                    };
+                });
+            console.log('apply result: ', JSON.stringify(result));
 
-        const result = await checkLimit(uid, at, question)
-            .catch((err) => {
-                console.log('check limit exception: ', err);
-                return {
-                    success: false,
-                    message: err?.message,
-                };
-            });
-        console.log('apply result: ', JSON.stringify(result));
-
-        if (!result.success) {
-            reply.send(result);
-            return;
-        }
-        if (!result.success) {
-            res.send(result);
-            return;
+            if (!result.success) {
+                reply.code(401).send(result);
+                return;
+            }
+            if (!result.success) {
+                res.send(result);
+                return;
+            }
+        } else {
+            console.log('Skip auth....');
         }
     } catch (error) {
         reply.send({

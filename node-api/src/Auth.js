@@ -34,6 +34,8 @@ export const checkLimit = async (uid, token, question) => {
             return {
                 success: false,
                 data: resp?.data,
+                message: resp?.message,
+                code: resp?.errorCode,
             };
         });
 };
