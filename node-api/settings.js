@@ -62,7 +62,7 @@ export default {
     // Options for the API server
     apiOptions: {
         port: process.env.API_PORT || 3000,
-        host: process.env.API_HOST || 'localhost',
+        host: process.env.API_HOST || '0.0.0.0',
         // (Optional) Set to true to enable `console.debug()` logging
         debug: false,
         // (Optional) Possible options: "chatgpt", "chatgpt-browser", "bing". (Default: "chatgpt")
