@@ -67,7 +67,7 @@ export default {
         // (Optional) Set to true to enable `console.debug()` logging
         debug: false,
         // (Optional) Possible options: "chatgpt", "chatgpt-browser", "bing". (Default: "chatgpt")
-        clientToUse: process.env.CLIENT || '',
+        clientToUse: process.env.CLIENT || 'chatgpt',
         // (Optional) Set this to allow changing the client or client options in POST /conversation.
         // To disable, set to `null`.
         perMessageClientOptionsWhitelist: {

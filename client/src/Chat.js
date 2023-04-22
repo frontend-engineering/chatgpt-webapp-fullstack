@@ -36,7 +36,7 @@ function ChatComponent(props) {
             appId,
             appToken,
             domain: 'http://localhost:3333',
-            pageDomain: 'http://localhost:3002',
+            pageDomain: 'http://localhost:3001',
             mobile: true,
         });
     }, []);
@@ -54,12 +54,19 @@ function ChatComponent(props) {
 
     const getLoginState = useCallback(async () => {
         if (!sdkInsta) return;
-        let state = await sdkInsta.getUserInfo();
-        console.log('get loginState: ', state)
-        if (!state) {
-            state = await sdkInsta.login()
+        try {
+            let state = await sdkInsta.getUserInfo();
+            console.log('get loginState: ', state)
+            if (!state) {
+                state = await sdkInsta.login()
+            }
+            setLoginState(state);
+        } catch (error) {
+            console.error('login state: ', error);
+            Toast.show({
+                content: `初始化失败 - ${error?.message}`
+            }) 
         }
-        setLoginState(state);
     }, [sdkInsta]);
 
     const getLoginTokens = useCallback(async () => {
@@ -132,7 +139,7 @@ function ChatComponent(props) {
             return;
         }
 
-        if (!loginState) {
+        if (!loginState && enableAuth) {
             Toast.show({
                 content: '请先登录'
             })
@@ -244,11 +251,6 @@ function ChatComponent(props) {
             sdkInsta.init()
                 .then(() => {
                     return getLoginState()
-                })
-                .then(info => {
-                    if (!info) {
-                        sdkInsta.login();
-                    }
                 })
         }
     }, [sdkInsta, getLoginState])

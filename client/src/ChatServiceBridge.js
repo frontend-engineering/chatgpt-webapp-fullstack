@@ -41,9 +41,18 @@ export const callBridge = async (options) => {
                 console.log('internal open: ', response);
                 // console.log('resp: ', await response.json())
                 if (response.status === 200) {
-                    onopen(response)
+                    onopen(response);
+                    // TODO: 错误信息处理
+                    // const json = await response.json();
+                    // console.log('response json: ', json);
+                    // if (json?.success) {
+                    //     onopen(json)
+                    // } else {
+                    //     onerror(json)
+                    // }
                     return;
                 }
+                
                 const err = new Error(`Failed to send message. HTTP ${response.status} - ${response.statusText}`);
                 if (onerror) {
                     onerror(err)

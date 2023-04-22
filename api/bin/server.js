@@ -64,8 +64,8 @@ const server = fastify();
 await server.register(FastifySSEPlugin);
 
 await server.register(fastifyStatic, {
-    root: fs.realpathSync('.'),
-    prefix: '/',
+    root: fs.realpathSync('../client/build'),
+    prefix: '/build/',
 });
 
 await server.register(cors, {
@@ -169,7 +169,7 @@ server.post('/api/chat', async (request, reply) => {
             console.log('Skip auth....');
         }
     } catch (error) {
-        reply.send({
+        reply.code(400).send({
             success: false,
             code: error?.code || 500,
             message: error?.message || '数据库查询失败',

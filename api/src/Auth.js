@@ -32,6 +32,16 @@ const increCntLocal = async (uid, cache) => {
     }, cacheKeyTTL);
 };
 
+const getFreeCnt = () => {
+    let freeCnt = process.env.FREE_CNT_PER_DAY ? Number(process.env.FREE_CNT_PER_DAY) : 20;
+    if (!(freeCnt > 0)) {
+        // 非法配置
+        console.error('FREE_CNT_PER_DAY 无效配置，重置为20');
+        freeCnt = 20;
+    }
+    return freeCnt;
+};
+
 export const checkLimit = async ({
     uid,
     token,
@@ -40,7 +50,7 @@ export const checkLimit = async ({
 }) => {
     console.log('checking limit', uid, token, question);
 
-    const userInfo = getCustomerInfo(token);
+    const userInfo = await getCustomerInfo(token);
     console.log('resp - ', userInfo);
 
     if (userInfo?.success) {
@@ -61,6 +71,7 @@ export const checkLimit = async ({
         // 计算免费额度
         const curDateStr = new Date().toDateString().replace(/\s/igm, '-');
         const cacheKey = `cnt-${uid}`;
+        const freeCnt = getFreeCnt();
         const cntData = await cache.get(cacheKey);
         if (!cntData || (cntData.date !== curDateStr)) {
             console.log('cache miss: ', cntData?.date, cacheKey);
@@ -73,13 +84,13 @@ export const checkLimit = async ({
                 data: {
                     date: curDateStr,
                     charged: false, // 免费额度
-                    cnt: process.env.FREE_CNT_PER_DAY,
+                    cnt: freeCnt,
                 },
             };
         }
         const { date, cnt } = cntData;
         console.log('cache hit: ', date, cnt);
-        if (cnt >= process.env.FREE_CNT_PER_DAY) {
+        if (cnt >= freeCnt) {
             return {
                 success: false,
                 data: {
@@ -94,7 +105,7 @@ export const checkLimit = async ({
             data: {
                 date,
                 charged: false, // 免费额度
-                cnt: process.env.FREE_CNT_PER_DAY - cnt,
+                cnt: freeCnt - cnt,
             },
         };
     }
