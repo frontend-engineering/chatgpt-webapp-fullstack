@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar, Tag } from 'antd-mobile'
-import { PlayOutline, HeartOutline } from 'antd-mobile-icons'
+import { PlayOutline, UserSetOutline } from 'antd-mobile-icons'
 import Cashier from '@cashier/web';
+import { useNavigate } from 'react-router-dom'
 import { callBridge } from './ChatServiceBridge';
 import Messages from './Messages';
 import { useLocalStorage } from './utils';
-import ShareLogo from './share.js'
 import './Chat.css';
 import PromotSelect from './PromptElement.js';
 import { appId, appToken, enableAuth } from './config.js';
 
 
 function ChatComponent(props) {
+    const navigate = useNavigate()
     const [loginState, setLoginState] = useState(null)
     const [question, setQuestion] = useState("");
     const [outMsgs, setOutMsgs] = useLocalStorage('chat-out-msgs', []);
@@ -35,8 +36,9 @@ function ChatComponent(props) {
             // 应用 ID
             appId,
             appToken,
-            domain: 'http://localhost:3333',
-            pageDomain: 'http://localhost:3001',
+            root: '#sdk-root',
+            // domain: 'http://localhost:3333',
+            pageDomain: 'https://pay.freecharger.cn',
             mobile: true,
         });
     }, []);
@@ -55,8 +57,9 @@ function ChatComponent(props) {
     const getLoginState = useCallback(async () => {
         if (!sdkInsta) return;
         try {
+            console.log('get login state...');
             let state = await sdkInsta.getUserInfo();
-            console.log('get loginState: ', state)
+            console.log('get loginState resp: ', state)
             if (!state) {
                 state = await sdkInsta.login()
             }
@@ -195,19 +198,11 @@ function ChatComponent(props) {
             setTyping(false);
         }
     }
-    const startCollect = (e) => {
-        e.preventDefault();
-        Toast.show({
-            content: 'Coming Soon'
-        })
-    }
 
-    const startShare = (e) => {
+    const gotoAccount = (e) => {
         e.preventDefault();
-        console.log('share ....')
-        Toast.show({
-            content: 'Coming Soon'
-        })
+        console.log('goto account page ....')
+        navigate('/build/account');
     }
 
     const deleteItem = (id, type) => {
@@ -241,15 +236,11 @@ function ChatComponent(props) {
         setQuestion(txt);
     }
 
-
-    useEffect(() => {
-        scrollToBottom()
-    }, [retMsgs, outMsgs]);
-
     useEffect(() => {
         if (sdkInsta) {
             sdkInsta.init()
                 .then(() => {
+                    console.log('sdk init done');
                     return getLoginState()
                 })
         }
@@ -271,14 +262,17 @@ function ChatComponent(props) {
 
     return (<div className="container">
         <div className="chatbox">
+            <div id='sdk-root'></div>
             <div className="top-bar">
             <div className="avatar">
                 <p>{loginState?.name?.toUpperCase().slice(0, 2) || 'W'}</p>
             </div>
             <div className="name">WebInfra</div>
             <div className="menu">
-                <HeartOutline onClick={startCollect} />
-                <ShareLogo onClick={startShare} />
+                <UserSetOutline onClick={gotoAccount} />
+                {/* <svg onClick={logout} viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M961 511.5c0.1-7.8-2.9-15.5-8.8-21.4-1-1-2.1-1.9-3.2-2.7L810.7 349.1c-11.7-11.7-30.7-11.7-42.4 0s-11.7 30.8 0 42.4l85.6 85.5h-471c-16.5 0-30 13.5-30 30s13.5 30 30 30h479.9l-94.6 94.5c-11.7 11.7-11.7 30.8 0 42.4 11.7 11.7 30.7 11.7 42.4 0L949 535.6c1.1-0.8 2.2-1.7 3.2-2.7 5.9-5.9 8.8-13.6 8.8-21.4z" fill="#141414" p-id="2780"></path><path d="M726.6 835c-63.4 41.8-137.2 64-213.5 64-52.4 0-103.2-10.3-151-30.5-46.2-19.5-87.7-47.5-123.4-83.2C203 749.7 175 708.2 155.5 662c-20.2-47.8-30.5-98.6-30.5-151 0-52.4 10.3-103.2 30.5-151 19.5-46.2 47.5-87.7 83.2-123.3C274.3 201 315.8 173 362 153.5c47.8-20.2 98.6-30.5 151-30.5 75.7 0 151.6 21.9 213.9 61.8 14 8.9 32.5 4.9 41.4-9.1 8.9-14 4.9-32.5-9.1-41.4C687.5 88.3 600 63 513.1 63c-60.5 0-119.2 11.8-174.4 35.2-53.4 22.6-101.3 54.9-142.4 96-41.1 41.1-73.4 89-96 142.4C76.9 391.9 65 450.5 65 511s11.9 119.1 35.2 174.4c22.6 53.4 54.9 101.3 96 142.4 41.1 41.1 89.1 73.4 142.4 96C393.9 947.2 452.5 959 513 959c88.1 0 173.3-25.5 246.6-73.9 13.8-9.1 17.6-27.7 8.5-41.6-9.1-13.8-27.7-17.6-41.5-8.5z" fill="#141414" p-id="2781"></path>
+                </svg> */}
             </div>
             </div>
             { hasNotice ? <div className='notice'>
