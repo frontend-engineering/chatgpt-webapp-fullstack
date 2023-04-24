@@ -16,11 +16,13 @@ const Account = () => {
             // domain: 'http://localhost:3333',
             pageDomain: 'https://pay.freecharger.cn',
             mobile: true,
+            inPage: true,
         });
     }, []);
+
     /**
- * 获取用户的登录状态
- */
+     * 获取用户的登录状态
+     */
     const getLoginState = useCallback(async () => {
         if (!sdkInsta) return;
         try {
@@ -35,9 +37,36 @@ const Account = () => {
             console.error('login state: ', error);
             Toast.show({
                 content: `初始化失败 - ${error?.message}`
-            }) 
+            })
         }
     }, [sdkInsta]);
+
+    const goPurchase = useCallback(async () => {
+        if (!sdkInsta) return;
+        const resp = await sdkInsta.purchase({})
+        console.log('purchase resp: ', resp);
+    }, [sdkInsta]);
+
+    const handleHelpClick = (e) => {
+        e.preventDefault();
+        Toast.show({
+            content: '微信公众号 (webinfra) 中，发送消息联系客服',
+        })
+    }
+
+    const clearUserAuth = (e) => {
+        e.preventDefault();
+        sdkInsta.logout().then(() => {
+            Toast.show({ content: '清除登录信息' })
+            window?.location?.reload();
+        })
+    }
+
+    const fetchUserAuth = (e) => {
+        e.preventDefault();
+        getLoginState()
+        return;
+    }
 
     useEffect(() => {
         if (sdkInsta) {
@@ -46,37 +75,7 @@ const Account = () => {
                     return getLoginState()
                 })
         }
-    }, [sdkInsta])
-
-    const handleHelpClick = (e) => {
-        e.preventDefault();
-        Toast.show({
-            content: '微信公众号 (webinfra) 中，发送消息联系客服',
-        })
-    }
-    const handleMemberClick = (e) => {
-        e.preventDefault();
-        Toast.show({
-            content: '尚不支持会员充值服务，可联系公众号客服',
-        })
-    }
-    const dumbClick = e => {
-        e.preventDefault();
-    }
-
-    const clearUserAuth = (e) => {
-        e.preventDefault();
-        sdkInsta.logout().then(() => {
-          Toast.show({ content: '清除登录信息' })
-          window?.location?.reload();
-        })
-      }
-    
-      const fetchUserAuth = (e) => {
-        e.preventDefault();
-        getLoginState()
-        return;
-      }
+    }, [sdkInsta, getLoginState])
 
     return <div className='account-container'>
         <div id='sdk-root'></div>
@@ -87,12 +86,12 @@ const Account = () => {
             >
                 {loginState ? (loginState.weixinProfile?.nickname || loginState?.name || loginState?.email || loginState?.id).slice(0, 13) : '未登录'}
             </List.Item>
-            <List.Item extra={loginState?.profile?.amount > 0 ? loginState?.profile?.amount : 0} onClick={dumbClick}>
+            <List.Item extra={loginState?.profile?.amount > 0 ? loginState?.profile?.amount : 0} onClick={goPurchase}>
                 存储额度
             </List.Item>
             <List.Item onClick={handleHelpClick}>联系客服</List.Item>
-            <List.Item onClick={ loginState ? clearUserAuth : fetchUserAuth}>
-                { (!loginState ? '点击登录' : "退出登录") }
+            <List.Item onClick={loginState ? clearUserAuth : fetchUserAuth}>
+                {(!loginState ? '点击登录' : "退出登录")}
             </List.Item>
         </List>
     </div>
