@@ -60,8 +60,8 @@ const server = fastify();
 await server.register(FastifySSEPlugin);
 
 await server.register(fastifyStatic, {
-    root: fs.realpathSync('.'),
-    prefix: '/',
+    root: fs.realpathSync('../client/build'),
+    prefix: '/build/',
 });
 
 await server.register(cors, {
