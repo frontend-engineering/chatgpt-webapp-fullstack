@@ -1,11 +1,7 @@
 /* eslint-disable strict */
 
 'use strict';
-
-// Read the .env file.
 import * as dotenv from 'dotenv';
-
-// Require the framework
 import Fastify from 'fastify';
 
 dotenv.config();
