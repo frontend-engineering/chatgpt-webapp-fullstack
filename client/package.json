@@ -21,7 +21,9 @@
     "whatwg-fetch": "^3.6.2"
   },
   "scripts": {
-    "start": "PORT=3001 react-scripts start",
+    "start": "run-script-os",
+    "start:darwin:linux": "PORT=3001 react-scripts start",
+    "start:win32": "SET PORT=3001 && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -43,5 +45,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "run-script-os": "^1.1.6"
   }
 }
