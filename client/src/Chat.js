@@ -36,11 +36,9 @@ function ChatComponent(props) {
             // 应用 ID
             appId,
             appToken,
-            root: '#sdk-root',
             // domain: 'http://localhost:3333',
             pageDomain: 'https://pay.freecharger.cn',
             mobile: true,
-            inPage: true,
         });
     }, []);
 
@@ -240,9 +238,12 @@ function ChatComponent(props) {
     useEffect(() => {
         if (sdkInsta) {
             sdkInsta.init()
-                .then(() => {
-                    console.log('sdk init done');
-                    return getLoginState()
+                .then((resp) => {
+                    if (resp) {
+                        // 加载到了操作结果数据，反馈登录/购买结果给用户
+                        console.log('found resp: ', resp);
+                    }
+                    return getLoginState()                    
                 })
         }
     }, [sdkInsta, getLoginState])

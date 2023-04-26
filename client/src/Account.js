@@ -12,11 +12,9 @@ const Account = () => {
             appId,
             appToken,
             // domain: 'https://test-sdk-api.my.webinfra.cloud'
-            root: '#sdk-root',
             // domain: 'http://localhost:3333',
             pageDomain: 'https://pay.freecharger.cn',
             mobile: true,
-            inPage: true,
         });
     }, []);
 
