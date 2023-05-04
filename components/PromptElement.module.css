@@ -1,0 +1,21 @@
+.prompt-list-container {
+    padding: 40px 16px;
+}
+
+.prompt-block {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.prompt-block .title {
+    padding: 12px 0 8px;
+    color: #697b8c;
+    font-size: 16px;
+}
+
+.prompt-block .split-line {
+    height: 0;
+    border-top: 1px solid #80808047;
+    margin: 2px 0 4px;
+}
+
