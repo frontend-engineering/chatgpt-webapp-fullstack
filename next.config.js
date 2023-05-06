@@ -29,29 +29,14 @@ const conf = {
   transpilePackages: ['antd-mobile'],
   webpack(config, { isServer, dev }) {
     // Enable webassembly
-    config.experiments = { asyncWebAssembly: true, layers: true };
-    // const ssrPlugin = config.plugins.find(
-    //   plugin => plugin instanceof SSRPlugin
-    // );
-
-    // if (ssrPlugin) {
-    //   patchSsrPlugin(ssrPlugin);
-    // }
-
-
-    // config.module.rules.find(k => k.oneOf !== undefined).oneOf.unshift(
-    //   {
-    //     test: /\.wasm$/,
-    //     type: "asset/resource",
-    //     generator: {
-    //       filename: 'static/chunks/[path][name].[hash][ext]'
-    //     },
-    //   }
-    // );
-
-    // config.output.chunkFilename = isServer
-    //   ? `${dev ? "[name]" : "[name].[fullhash]"}.js`
-    //   : `static/chunks/${dev ? "[name]" : "[name].[fullhash]"}.js`;
+    config.experiments = { ...config.experiments, asyncWebAssembly: true, layers: true };
+    if (isServer) {
+      config.output.webassemblyModuleFilename =
+        '../static/wasm/[modulehash].wasm';
+    } else {
+      config.output.webassemblyModuleFilename =
+        'static/wasm/[modulehash].wasm';
+    }
 
     // Unfortunately there isn't an easy way to override the replacement function body, so we 
     // have to just replace the whole plugin `apply` body.
