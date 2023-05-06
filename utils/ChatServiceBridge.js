@@ -31,10 +31,10 @@ export const getSettings = async () => {
 }
 
 export async function getClient() {
-    settings = await getSettings();
+    await getSettings();
 
     let clientToUseForMessage = settings.clientToUse;
-    const clientOptions = filterClientOptions(body.clientOptions, clientToUseForMessage);
+    const clientOptions = await filterClientOptions(body.clientOptions);
     if (clientOptions && clientOptions.clientToUse) {
         clientToUseForMessage = clientOptions.clientToUse;
         delete clientOptions.clientToUse;
@@ -75,8 +75,8 @@ export async function getClient() {
  * Returns original object if no whitelist is set.
  * @param {*} inputOptions
  */
-export function filterClientOptions(inputOptions) {
-    const { perMessageClientOptionsWhitelist, clientToUseForMessage } = settings;
+export async function filterClientOptions(inputOptions) {
+    const { perMessageClientOptionsWhitelist, clientToUseForMessage } = settings || (await this.getSettings());
     if (!inputOptions || !perMessageClientOptionsWhitelist) {
         return null;
     }

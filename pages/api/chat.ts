@@ -17,7 +17,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response("No prompt in the request", { status: 400 });
   }
 
-  const clientOptions = filterClientOptions(body.clientOptions);
+  const clientOptions = await filterClientOptions(body.clientOptions);
   if (clientOptions && clientOptions.clientToUse) {
       delete clientOptions.clientToUse;
   }
