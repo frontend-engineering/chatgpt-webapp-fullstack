@@ -7,8 +7,10 @@ let settings;
 
 export const getSettings = async () => {
     if (!settings) {
+        console.log('importing ...')
         settings = (await import('./Settings')).default;
     }
+    console.log('settings : ', settings);
     if (!settings) {
         console.error('Error: the settings.js file does not exist.');
         throw new Error('Settings not found')
