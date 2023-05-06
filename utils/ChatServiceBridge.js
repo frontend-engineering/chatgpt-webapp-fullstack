@@ -1,6 +1,7 @@
 // Run the server first with `npm run server`
 import { fetchEventSource } from '@fortaine/fetch-event-source';
 import ChatGPTClient from './client/ChatGPTClient'
+import { KeyvFile } from 'keyv-file';
 // import { HOST_URL } from './config'
 export const HOST_URL = 'http://localhost:3000';
 let settings;
