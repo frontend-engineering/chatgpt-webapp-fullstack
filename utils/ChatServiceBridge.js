@@ -29,7 +29,7 @@ export const getSettings = async () => {
 }
 
 export async function getClient() {
-    const settings = await getSettings();
+    settings = await getSettings();
 
     let clientToUseForMessage = settings.clientToUse;
     const clientOptions = filterClientOptions(body.clientOptions, clientToUseForMessage);
