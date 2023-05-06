@@ -76,7 +76,7 @@ export async function getClient() {
  * @param {*} inputOptions
  */
 export async function filterClientOptions(inputOptions) {
-    const { perMessageClientOptionsWhitelist, clientToUseForMessage } = settings || (await this.getSettings());
+    const { perMessageClientOptionsWhitelist, clientToUseForMessage } = settings || (await getSettings());
     if (!inputOptions || !perMessageClientOptionsWhitelist) {
         return null;
     }
