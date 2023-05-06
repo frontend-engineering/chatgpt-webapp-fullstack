@@ -125,14 +125,14 @@ export default class ChatGPTClient {
             return tokenizersCache[encoding];
         }
 
-        const encoding = new Tiktoken(
+        const encoder = new Tiktoken(
             model.bpe_ranks,
             model.special_tokens,
             model.pat_str
         );
 
         // TODO: Support more encoder
-        return encoding;
+        return encoder;
         // const tokens = encoding.encode("hello world");
 
         // let tokenizer;
