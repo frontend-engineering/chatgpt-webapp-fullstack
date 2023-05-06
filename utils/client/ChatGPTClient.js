@@ -1,5 +1,9 @@
 import { nanoid } from 'nanoid';
-import { encoding_for_model as encodingForModel, get_encoding as getEncoding } from '@dqbd/tiktoken';
+// import { encoding_for_model as encodingForModel, get_encoding as getEncoding } from '@dqbd/tiktoken';
+// @ts-expect-error
+import wasm from "@dqbd/tiktoken/lite/tiktoken_bg.wasm?module";
+import model from "@dqbd/tiktoken/encoders/cl100k_base.json";
+import { init, Tiktoken } from "@dqbd/tiktoken/lite/init";
 // import { Agent, ProxyAgent } from 'undici';
 
 const CHATGPT_MODEL = 'gpt-3.5-turbo';
@@ -21,7 +25,7 @@ export default class ChatGPTClient {
         this.setOptions(options);
     }
 
-    setOptions(options) {
+    async setOptions(options) {
         if (this.options && !this.options.replaceOptions) {
             this.options = {
                 ...this.options,
@@ -114,18 +118,31 @@ export default class ChatGPTClient {
         return this;
     }
 
-    static getTokenizer(encoding, isModelName = false, extendSpecialTokens = {}) {
+    static async getTokenizer(encoding, isModelName = false, extendSpecialTokens = {}) {
         if (tokenizersCache[encoding]) {
             return tokenizersCache[encoding];
         }
-        let tokenizer;
-        if (isModelName) {
-            tokenizer = encodingForModel(encoding, extendSpecialTokens);
-        } else {
-            tokenizer = getEncoding(encoding, extendSpecialTokens);
-        }
-        tokenizersCache[encoding] = tokenizer;
-        return tokenizer;
+
+        await init((imports) => WebAssembly.instantiate(wasm, imports));
+
+        const encoding = new Tiktoken(
+            model.bpe_ranks,
+            model.special_tokens,
+            model.pat_str
+        );
+
+        // TODO: Support more encoder
+        return encoding;
+        // const tokens = encoding.encode("hello world");
+
+        // let tokenizer;
+        // if (isModelName) {
+        //     tokenizer = encodingForModel(encoding, extendSpecialTokens);
+        // } else {
+        //     tokenizer = getEncoding(encoding, extendSpecialTokens);
+        // }
+        // tokenizersCache[encoding] = tokenizer;
+        // return tokenizer;
     }
 
     async getCompletion(input) {
@@ -282,7 +299,7 @@ export default class ChatGPTClient {
         opts = {},
     ) {
         if (opts.clientOptions && typeof opts.clientOptions === 'object') {
-            this.setOptions(opts.clientOptions);
+            await this.setOptions(opts.clientOptions);
         }
 
         const conversationId = opts.conversationId || nanoid();
