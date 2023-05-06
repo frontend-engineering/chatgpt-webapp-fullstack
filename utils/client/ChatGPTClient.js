@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 // import { encoding_for_model as encodingForModel, get_encoding as getEncoding } from '@dqbd/tiktoken';
 // @ts-expect-error
-import wasm from "@dqbd/tiktoken/lite/tiktoken_bg.wasm?module";
+import * as wasm from "@dqbd/tiktoken/lite/tiktoken_bg.wasm?module";
 import model from "@dqbd/tiktoken/encoders/cl100k_base.json";
 import { init, Tiktoken } from "@dqbd/tiktoken/lite/init";
 // import { Agent, ProxyAgent } from 'undici';
