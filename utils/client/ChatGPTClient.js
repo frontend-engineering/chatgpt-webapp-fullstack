@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { nanoid } from 'nanoid';
 import { encoding_for_model as encodingForModel, get_encoding as getEncoding } from '@dqbd/tiktoken';
 // import { Agent, ProxyAgent } from 'undici';
 
@@ -285,8 +285,8 @@ export default class ChatGPTClient {
             this.setOptions(opts.clientOptions);
         }
 
-        const conversationId = opts.conversationId || crypto.randomUUID();
-        const parentMessageId = opts.parentMessageId || crypto.randomUUID();
+        const conversationId = opts.conversationId || nanoid();
+        const parentMessageId = opts.parentMessageId || nanoid();
 
         let conversation = await this.conversationsCache.get(conversationId);
         if (!conversation) {
@@ -297,7 +297,7 @@ export default class ChatGPTClient {
         }
 
         const userMessage = {
-            id: crypto.randomUUID(),
+            id: nanoid(),
             parentMessageId,
             role: 'User',
             message,
@@ -348,7 +348,7 @@ export default class ChatGPTClient {
         reply = reply.trim();
 
         const replyMessage = {
-            id: crypto.randomUUID(),
+            id: nanoid(),
             parentMessageId: userMessage.id,
             role: 'ChatGPT',
             message: reply,

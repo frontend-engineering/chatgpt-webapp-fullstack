@@ -19,11 +19,12 @@ const conf = {
     unoptimized: true,
   },
   experimental: {
-    transpilePackages: ['antd-mobile'],
+    // layers: true,
   },
+  transpilePackages: ['antd-mobile'],
   webpack(config, { isServer, dev }) {
     // Enable webassembly
-    config.experiments = { asyncWebAssembly: true };
+    config.experiments = { asyncWebAssembly: true, layers: true };
 
     // In prod mode and in the server bundle (the place where this "chunks" bug
     // appears), use the client static directory for the same .wasm bundle
