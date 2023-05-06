@@ -13,7 +13,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   const body = ((await req.json()) || {})
 
-  if (!prompt) {
+  if (!body.message) {
     return new Response("No prompt in the request", { status: 400 });
   }
 
