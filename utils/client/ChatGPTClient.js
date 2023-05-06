@@ -70,6 +70,8 @@ export default class ChatGPTClient {
         this.userLabel = this.options.userLabel || 'User';
         this.chatGptLabel = this.options.chatGptLabel || 'ChatGPT';
 
+        await init((imports) => WebAssembly.instantiate(wasm, imports));
+
         if (isChatGptModel) {
             // Use these faux tokens to help the AI understand the context since we are building the chat log ourselves.
             // Trying to use "<|im_start|>" causes the AI to still generate "<" or "<|" at the end sometimes for some reason,
@@ -118,12 +120,10 @@ export default class ChatGPTClient {
         return this;
     }
 
-    static async getTokenizer(encoding, isModelName = false, extendSpecialTokens = {}) {
+    static getTokenizer(encoding, isModelName = false, extendSpecialTokens = {}) {
         if (tokenizersCache[encoding]) {
             return tokenizersCache[encoding];
         }
-
-        await init((imports) => WebAssembly.instantiate(wasm, imports));
 
         const encoding = new Tiktoken(
             model.bpe_ranks,
