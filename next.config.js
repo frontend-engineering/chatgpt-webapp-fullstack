@@ -1,10 +1,11 @@
 /** @type {import('next').NextConfig} */
-const SSRPlugin = require("next/dist/build/webpack/plugins/nextjs-ssr-import")
-  .default;
-const { dirname, relative, resolve, join } = require("path");
+// const SSRPlugin = require("next/dist/build/webpack/plugins/nextjs-ssr-import")
+//   .default;
+// const { dirname, relative, resolve, join } = require("path");
 
 const conf = {
   reactStrictMode: true,
+  swcMinify: true,
   async redirects() {
     return [
       {
@@ -29,13 +30,29 @@ const conf = {
   webpack(config, { isServer, dev }) {
     // Enable webassembly
     config.experiments = { asyncWebAssembly: true, layers: true };
-    const ssrPlugin = config.plugins.find(
-      plugin => plugin instanceof SSRPlugin
-    );
+    // const ssrPlugin = config.plugins.find(
+    //   plugin => plugin instanceof SSRPlugin
+    // );
 
-    if (ssrPlugin) {
-      patchSsrPlugin(ssrPlugin);
-    }
+    // if (ssrPlugin) {
+    //   patchSsrPlugin(ssrPlugin);
+    // }
+
+
+    // config.module.rules.find(k => k.oneOf !== undefined).oneOf.unshift(
+    //   {
+    //     test: /\.wasm$/,
+    //     type: "asset/resource",
+    //     generator: {
+    //       filename: 'static/chunks/[path][name].[hash][ext]'
+    //     },
+    //   }
+    // );
+
+    // config.output.chunkFilename = isServer
+    //   ? `${dev ? "[name]" : "[name].[fullhash]"}.js`
+    //   : `static/chunks/${dev ? "[name]" : "[name].[fullhash]"}.js`;
+
     // Unfortunately there isn't an easy way to override the replacement function body, so we 
     // have to just replace the whole plugin `apply` body.
     function patchSsrPlugin(plugin) {
