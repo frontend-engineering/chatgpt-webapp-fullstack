@@ -11,7 +11,7 @@ export const getSettings = async () => {
     }
     if (!settings) {
         console.error('Error: the settings.js file does not exist.');
-        process.exit(1);
+        throw new Error('Settings not found')
     }
 
     settings.cacheOptions.store = new KeyvFile({});
