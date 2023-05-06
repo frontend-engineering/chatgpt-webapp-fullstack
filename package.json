@@ -5,6 +5,7 @@
     "build": "next build",
     "start": "next start"
   },
+  "homepage": "https://chatgpt-webapp-fullstack-b8td-8dzy0yt7z-webinfra.vercel.app/",
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.7",
     "@fortaine/fetch-event-source": "^3.0.6",
