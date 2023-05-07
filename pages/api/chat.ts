@@ -1,4 +1,4 @@
-import { getSettings, getClient, filterClientOptions } from '../../utils/ChatServiceBridge';
+import { getClient, filterClientOptions } from '../../utils/ChatServiceBridge';
 
 // if (!process.env.OPENAI_API_KEY) {
 //   throw new Error("Missing env var from OpenAI");

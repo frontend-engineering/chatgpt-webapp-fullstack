@@ -1,28 +1,36 @@
 // Run the server first with `npm run server`
-import { fetchEventSource } from '@fortaine/fetch-event-source';
+import { getAll } from '@vercel/edge-config';
+import kv from "@vercel/kv";
+import Keyv from 'keyv';
 import ChatGPTClient from './client/ChatGPTClient'
-import { KeyvFile } from 'keyv-file';
 // import { HOST_URL } from './config'
 export const HOST_URL = 'http://localhost:3000';
 let settings;
 
-export const getSettings = async () => {
-    if (!settings) {
-        console.log('importing ...')
-        settings = (await import('./Settings')).default;
+export const getContext = async () => {
+    const config = await getAll();
+    console.log('---get config---', config);
+    
+    if (!config) {
+        console.error('Error: need setup vercel config first');
+        throw new Error('config not found')
     }
-    console.log('settings : ', settings);
-    if (!settings) {
-        console.error('Error: the settings.js file does not exist.');
-        throw new Error('Settings not found')
-    }
-
-    settings.cacheOptions.store = new KeyvFile({});
 
     const clientToUse = settings.apiOptions?.clientToUse || settings.clientToUse || 'chatgpt';
-    const conversationsCache = new Keyv(settings.cacheOptions);
+    console.log('create keyv from url: ', process.env.ChatKV_URL);
+    if (!process.env.ChatKV_URL) {
+        throw new Error('redis kv is not setup');
+    }
+    const conversationsCache = new Keyv(process.env.ChatKV_URL);
 
     const perMessageClientOptionsWhitelist = settings.apiOptions?.perMessageClientOptionsWhitelist || null;
+    settings = {
+        ...settings,
+        clientToUse,
+        conversationsCache,
+        perMessageClientOptionsWhitelist,
+    }
+
     return {
         ...settings,
         clientToUse,
@@ -32,7 +40,7 @@ export const getSettings = async () => {
 }
 
 export async function getClient() {
-    await getSettings();
+    await getContext();
 
     let clientToUseForMessage = settings.clientToUse;
     const clientOptions = await filterClientOptions(body.clientOptions);
@@ -77,7 +85,7 @@ export async function getClient() {
  * @param {*} inputOptions
  */
 export async function filterClientOptions(inputOptions) {
-    const { perMessageClientOptionsWhitelist, clientToUseForMessage } = settings || (await getSettings());
+    const { perMessageClientOptionsWhitelist, clientToUseForMessage } = settings || (await getContext());
     if (!inputOptions || !perMessageClientOptionsWhitelist) {
         return null;
     }
