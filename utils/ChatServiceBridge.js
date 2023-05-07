@@ -1,6 +1,5 @@
 // Run the server first with `npm run server`
 import { getAll } from '@vercel/edge-config';
-import kv from "@vercel/kv";
 import Keyv from 'keyv';
 import ChatGPTClient from './client/ChatGPTClient'
 // import { HOST_URL } from './config'

@@ -18,6 +18,7 @@ specifiers:
   autoprefixer: ^10.4.12
   classnames: ^2.3.2
   eventsource-parser: ^0.0.5
+  keyv: ^4.5.2
   nanoid: ^4.0.2
   next: latest
   postcss: ^8.4.18
@@ -48,6 +49,7 @@ dependencies:
   antd-mobile-icons: registry.npmmirror.com/antd-mobile-icons/0.3.0
   classnames: registry.npmmirror.com/classnames/2.3.2
   eventsource-parser: registry.npmmirror.com/eventsource-parser/0.0.5
+  keyv: registry.npmmirror.com/keyv/4.5.2
   nanoid: registry.npmmirror.com/nanoid/4.0.2
   next: registry.npmmirror.com/next/13.4.1_txdvpvppf2ilsh27xadmwrzlmm
   react: registry.npmmirror.com/react/18.2.0
@@ -1202,6 +1204,20 @@ packages:
     version: 4.0.0
     dev: false
 
+  registry.npmmirror.com/json-buffer/3.0.1:
+    resolution: {integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/json-buffer/-/json-buffer-3.0.1.tgz}
+    name: json-buffer
+    version: 3.0.1
+    dev: false
+
+  registry.npmmirror.com/keyv/4.5.2:
+    resolution: {integrity: sha512-5MHbFaKn8cNSmVW7BYnijeAVlE4cYA/SVkifVgrh7yotnfhKmjuXpDKjrABLnT0SfHWV21P8ow07OGfRrNDg8g==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/keyv/-/keyv-4.5.2.tgz}
+    name: keyv
+    version: 4.5.2
+    dependencies:
+      json-buffer: registry.npmmirror.com/json-buffer/3.0.1
+    dev: false
+
   registry.npmmirror.com/kleur/4.1.5:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/kleur/-/kleur-4.1.5.tgz}
     name: kleur
@@ -2340,7 +2356,7 @@ packages:
   registry.npmmirror.com/undici/5.22.0:
     resolution: {integrity: sha512-f6pTQ9RF4DQtwoWSaC42P/NKlUjvezVvd9r155ohqkwFNRyBKM3f3pcty3ouusefNRyM25XhIQEbeQ46sZDJfQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/undici/-/undici-5.21.2.tgz}
     name: undici
-    version: 5.21.2
+    version: 5.22.0
     engines: {node: '>=12.18'}
     deprecated: '[WARNING] Use 5.21.2 instead of 5.22.0, reason: https://github.com/nodejs/undici/pull/2091'
     dependencies:
