@@ -162,6 +162,7 @@ export const callBridge = async (options) => {
     };
 
     console.log('start call brdige...', new Date());
+    let openedConnection = false;
     try {
         let reply = '';
         let msgId = '';
@@ -193,6 +194,7 @@ export const callBridge = async (options) => {
         let done = false;
 
         await onopen()
+        openedConnection = true;
         let reportStr = '';
         let lastChunk = '';
         while (!done) {
@@ -225,9 +227,10 @@ export const callBridge = async (options) => {
         console.log('final reply: ', reply);
         console.log('final reportStr: ', reportStr);
 
+        // 连接意外中断，没有收到report数据
         if (!reportStr) {
             console.error('no reply meta data found')
-            return;
+            throw new Error('No reply meta data')
         }
         const resp = JSON.parse(reportStr);
         console.log('report: ', resp)
@@ -244,10 +247,15 @@ export const callBridge = async (options) => {
             conversationId: conversationId,
         };
         // Done: Result accept
-        onclose(resultObj)
         return resultObj;
     } catch (err) {
         console.error('ERROR ', err);
-        onerror(err)
+        if (openedConnection) {
+            console.log('connection close event');
+            onclose()
+        } else {
+            console.log('connection error event');
+            onerror(err)
+        }
     }
 }
