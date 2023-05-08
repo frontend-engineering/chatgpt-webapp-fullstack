@@ -148,6 +148,7 @@ export default class ChatGPTClient {
     async getCompletion({
         input,
         abortController,
+        conversationId,
         onEnd,
         onError,
     }) {
@@ -210,9 +211,21 @@ export default class ChatGPTClient {
                         const data = event.data;
                         // https://beta.openai.com/docs/api-reference/completions/create#completions/create-stream
                         if (data === "[DONE]") {
-                            controller.close();
-                            onEnd(reply)
-                            reply = null;
+                            reply = reply.trim();
+
+                            const replyMessage = {
+                                id: nanoid(),
+                                conversationId,
+                                message: reply,
+                            };
+                            const queue = encoder.encode('[REPORT]' + JSON.stringify(replyMessage));
+                            controller.enqueue(queue);
+                            setTimeout(() => {
+                                controller.close();
+                                reply = null;
+                            }, 300);
+
+                            onEnd(replyMessage)
                             return;
                         }
                         if (data === self.endToken) {
@@ -220,6 +233,7 @@ export default class ChatGPTClient {
                         }
                         try {
                             const json = JSON.parse(data);
+                            console.log('openai resp data: ', json);
                             const text = json.choices[0].delta?.content || "";
                             if (!text) {
                                 return;
@@ -355,21 +369,18 @@ export default class ChatGPTClient {
             payload = await this.buildPrompt(conversation.messages, userMessage.id);
         }
 
-        let reply = '';
         const stream = await this.getCompletion({
             input: payload,
             abortController: opts.abortController || new AbortController(),
-            onEnd: async (reply) => {
-                console.log('completion result: ', reply);
-                reply = reply.trim();
-
-                const replyMessage = {
-                    id: nanoid(),
+            conversationId,
+            onEnd: async (replyMessage) => {
+                console.log('completion result: ', replyMessage);
+                if (!replyMessage) return;
+                conversation.messages.push({
+                    ...replyMessage,
                     parentMessageId: userMessage.id,
                     role: 'ChatGPT',
-                    message: reply,
-                };
-                conversation.messages.push(replyMessage);
+                });
 
                 await this.conversationsCache.set(conversationId, conversation);
 

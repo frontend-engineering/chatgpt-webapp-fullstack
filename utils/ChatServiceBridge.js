@@ -291,19 +291,36 @@ export const callBridge = async (options) => {
         const chunkValue = decoder.decode(value);
         console.log('read chunk: ', chunkValue);
         if (chunkValue) {
+            if (chunkValue.startsWith('[REPORT]')) {
+                try {
+                    const resp = JSON.parse(chunkValue.slice(8));
+                    console.log('report: ', resp)
+                    msgId = resp.id;
+                    conversationId = resp.conversationId;
+                    const finalResp = resp.message;
+                    if (finalResp?.length > reply?.length) {
+                        console.log('use returned full response: ', finalResp);
+                        reply = finalResp;
+                    }
+                    const resultObj = {
+                        response: reply,
+                        messageId: msgId,
+                        conversationId: conversationId,
+                    };
+                    // Done: Result accept
+                    onclose(resultObj)
+                } catch (error) {
+                    console.error('final report parse failed: ', error)
+                    onerror(error);
+                }
+            }
             onmessage(chunkValue);
             // TODO: Error event handler
             reply += chunkValue
         }
       }
         console.log('final reply: ', reply);
-        const resultObj = {
-            response: reply,
-            messageId: msgId,
-            conversationId: conversationId,
-        };
-        // Done: Result accept
-        onclose(resultObj)
+
         return resultObj;
     } catch (err) {
         console.error('ERROR ', err);
