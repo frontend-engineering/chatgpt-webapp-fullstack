@@ -194,26 +194,39 @@ export const callBridge = async (options) => {
 
         await onopen()
         let reportStr = '';
+        let lastChunk = '';
         while (!done) {
             const { value, done: doneReading } = await reader.read();
             done = doneReading;
             const chunkValue = decoder.decode(value);
             console.log('read chunk: ', chunkValue);
             if (chunkValue) {
-                if (chunkValue.startsWith('[__REPORT__]')) {
-                    reportStr = chunkValue.slice(12) || ' ';
-                } else if (reportStr) {
+                if (reportStr) {
                     reportStr += chunkValue;
                 } else {
-                    onmessage(chunkValue);
-                    // TODO: Error event handler
-                    reply += chunkValue
+                    const concatStr = `${lastChunk.trim()}${chunkValue.trim()}`;
+                    const tokenIdx = concatStr.indexOf('[__REPORT__]');
+                    if (tokenIdx > -1) {
+                        console.log('token detected: ', tokenIdx, concatStr, tokenIdx - lastChunk.length);
+                        reportStr = concatStr.slice(tokenIdx + 12) || ' ';
+                        // 临界情况
+                        if (lastChunk.length > tokenIdx) {
+                            reply = reply.slice(0, tokenIdx - lastChunk.length)
+                        }
+                    }  else {
+                        onmessage(chunkValue);
+                        reply += chunkValue
+                        lastChunk = chunkValue;
+                    }
                 }
+                // TODO: Error event handler
             }
         }
-        console.log('final reply: ', reply, reportStr);
+        console.log('final reply: ', reply);
+        console.log('final reportStr: ', reportStr);
+
         if (!reportStr) {
-            console.error('no request report data found')
+            console.error('no reply meta data found')
             return;
         }
         const resp = JSON.parse(reportStr);
