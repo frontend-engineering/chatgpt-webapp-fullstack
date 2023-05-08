@@ -56,23 +56,27 @@ function ChatComponent(props) {
     }
 
     const onmessage = (msgObj) => {
-        // { data: 'Hello', event: '', id: '', retry: undefined }
-        setAnswer(lastAns => (lastAns || '') + JSON.parse(msgObj.data));
+        console.log('onmsg - ', msgObj)
+        setAnswer(lastAns => (lastAns || '') + msgObj);
         scrollToBottom()
     }
-
-    const onopen = () => {
-        console.log('opened');
+    function nextTick() {
+        return new Promise(resolve => setTimeout(resolve, 0));
+    }
+    const onopen = async () => {
+        console.log('open', new Date(), new Date(answerTSRef.current));
         setAnswerTS(new Date().valueOf());
+        await nextTick();
+        console.log('opened', new Date(), new Date(answerTSRef.current));
     }
 
     const onclose = () => {
-        console.log('closed ', answerRef.current)
+        console.log('closed ', answerRef.current, new Date())
         if (answerRef.current) {
             setRetMsgs([...retMsgs, { id: genRandomMsgId(), msg: answerRef.current, timestamp: answerTSRef.current }])
             setAnswer('')
             setTyping(false);
-            // setAnswerTS(new Date().valueOf());
+            setAnswerTS(new Date().valueOf());
         }
     }
     const onerror = (message) => {
@@ -125,20 +129,20 @@ function ChatComponent(props) {
                 debug: props.debug
             })
  
-            console.log('client stream result: ', abortSignalRef.current, callRes);
+            console.log('client stream result: ', abortSignalRef.current, callRes, answerTSRef.current, new Date(answerTSRef.current));
             const { response, messageId, conversationId } = callRes || {}
 
-            if (messageId) {
-                setMsgId(messageId);
-            }
+            const curMsgId = messageId || genRandomMsgId()
+            setMsgId(curMsgId);
+
             if (conversationId) {
                 setConvId(conversationId);
             }
 
-            // TODO: Persist request feedback to mysql
             setTyping(false);
-            setRetMsgs([...retMsgs, { id: messageId, msg: response, timestamp: answerTSRef.current }])
+            setRetMsgs([...retMsgs, { id: curMsgId, msg: response, timestamp: answerTSRef.current }])
             setAnswer('')
+            setAnswerTS(Date.now())
 
             return callRes;
         } catch (error) {

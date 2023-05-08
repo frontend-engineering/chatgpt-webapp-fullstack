@@ -17,12 +17,14 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response("No prompt in the request", { status: 400 });
   }
 
+  let client;
   const clientOptions = await filterClientOptions(body.clientOptions);
   if (clientOptions && clientOptions.clientToUse) {
+      client = clientOptions.clientToUse;
       delete clientOptions.clientToUse;
   }
 
-  const targetClient = await getClient();
+  const targetClient = await getClient(client);
   const stream = await targetClient.sendMessage(body.message, {
       jailbreakConversationId: body.jailbreakConversationId ? body.jailbreakConversationId.toString() : undefined,
       conversationId: body.conversationId ? body.conversationId.toString() : undefined,

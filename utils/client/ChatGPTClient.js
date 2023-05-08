@@ -4,7 +4,6 @@ import { nanoid } from 'nanoid';
 import * as wasm from "@dqbd/tiktoken/lite/tiktoken_bg.wasm?module";
 import model from "@dqbd/tiktoken/encoders/cl100k_base.json";
 import { init, Tiktoken } from "@dqbd/tiktoken/lite/init";
-// import { Agent, ProxyAgent } from 'undici';
 
 const CHATGPT_MODEL = 'gpt-3.5-turbo';
 
@@ -145,7 +144,12 @@ export default class ChatGPTClient {
         // return tokenizer;
     }
 
-    async getCompletion(input) {
+    async getCompletion({
+        input,
+        abortController,
+        onEnd,
+        onError,
+    }) {
         if (!abortController) {
             abortController = new AbortController();
         }
@@ -179,54 +183,73 @@ export default class ChatGPTClient {
         }
 
         const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
+        const decoder = new TextDecoder();
 
-  let counter = 0;
+        let counter = 0;
 
-  const res = await fetch(url, {
-    ...opts,
-    // signal: abortController.signal,
-    });
+        const res = await fetch(url, {
+            ...opts,
+            signal: abortController.signal,
+            }).catch(err => {
+                console.error('fetch catch: ', err);
+                return err?.message || 'fetch failed';
+            })
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      // callback
-      function onParse(event) {
-        if (event.type === "event") {
-          const data = event.data;
-          // https://beta.openai.com/docs/api-reference/completions/create#completions/create-stream
-          if (data === "[DONE]") {
-            controller.close();
-            return;
-          }
-          try {
-            const json = JSON.parse(data);
-            const text = json.choices[0].delta?.content || "";
-            if (counter < 2 && (text.match(/\n/) || []).length) {
-              // this is a prefix character (i.e., "\n\n"), do nothing
-              return;
+            if (!res || (typeof res === 'string')) {
+                return res;
             }
-            const queue = encoder.encode(text);
-            controller.enqueue(queue);
-            counter++;
-          } catch (e) {
-            // maybe parse error
-            controller.error(e);
-          }
-        }
-      }
 
-      // stream response (SSE) from OpenAI may be fragmented into multiple chunks
-      // this ensures we properly read chunks and invoke an event for each SSE event stream
-      const parser = createParser(onParse);
-      // https://web.dev/streams/#asynchronous-iteration
-      for await (const chunk of res.body) {
-        parser.feed(decoder.decode(chunk));
-      }
-    },
-  });
+        let reply = '';
+        const stream = new ReadableStream({
+            async start(controller) {
+                // callback
+                function onParse(event) {
+                    if (event.type === "event") {
+                        const data = event.data;
+                        // https://beta.openai.com/docs/api-reference/completions/create#completions/create-stream
+                        if (data === "[DONE]") {
+                            controller.close();
+                            onEnd(reply)
+                            reply = null;
+                            return;
+                        }
+                        if (data === this.endToken) {
+                            return;
+                        }
+                        try {
+                            const json = JSON.parse(data);
+                            const text = json.choices[0].delta?.content || "";
+                            if (!text) {
+                                return;
+                            }
+                            
+                            if (counter < 2 && (text.match(/\n/) || []).length) {
+                                // this is a prefix character (i.e., "\n\n"), do nothing
+                                return;
+                            }
+                            reply += text;
+                            const queue = encoder.encode(text);
+                            controller.enqueue(queue);
+                            counter++;
+                        } catch (e) {
+                            // maybe parse error
+                            controller.error(e);
+                            onError(e);
+                        }
+                    }
+                }
 
-  return stream;
+                // stream response (SSE) from OpenAI may be fragmented into multiple chunks
+                // this ensures we properly read chunks and invoke an event for each SSE event stream
+                const parser = createParser(onParse);
+                // https://web.dev/streams/#asynchronous-iteration
+                for await (const chunk of res.body) {
+                    parser.feed(decoder.decode(chunk));
+                }
+            },
+        });
+
+        return stream;
 
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
@@ -331,55 +354,37 @@ export default class ChatGPTClient {
         }
 
         let reply = '';
-        let result = null;
-        const stream = await this.getCompletion(
-                payload,
-                // (progressMessage) => {
-                //     if (progressMessage === '[DONE]') {
-                //         return;
-                //     }
-                //     // const token = this.isChatGptModel ? progressMessage.choices[0].delta.content : progressMessage.choices[0].text;
-                //     // first event's delta content is always undefined
-                //     if (!progressMessage) {
-                //         return;
-                //     }
-                //     if (this.options.debug) {
-                //         console.debug(progressMessage);
-                //     }
-                //     if (progressMessage === this.endToken) {
-                //         return;
-                //     }
-                //     opts.onProgress(progressMessage);
-                //     reply += progressMessage;
-                // },
-                // opts.abortController || new AbortController(),
-            );
+        const stream = await this.getCompletion({
+            input: payload,
+            abortController: opts.abortController || new AbortController(),
+            onEnd: async (reply) => {
+                console.log('completion result: ', reply);
+                reply = reply.trim();
+
+                const replyMessage = {
+                    id: nanoid(),
+                    parentMessageId: userMessage.id,
+                    role: 'ChatGPT',
+                    message: reply,
+                };
+                conversation.messages.push(replyMessage);
+
+                await this.conversationsCache.set(conversationId, conversation);
+
+                return {
+                    response: replyMessage.message,
+                    conversationId,
+                    messageId: replyMessage.id,
+                    details: result || {},
+                };
+            },
+            onError: (err) => {
+                console.error('completion error: ', err);
+            }
+        });
         
-        console.log('get completion stream got down');
+        console.log('get completion stream got down', stream);
         return stream;
-        // avoids some rendering issues when using the CLI app
-        if (this.options.debug) {
-            console.debug();
-        }
-
-        reply = reply.trim();
-
-        const replyMessage = {
-            id: nanoid(),
-            parentMessageId: userMessage.id,
-            role: 'ChatGPT',
-            message: reply,
-        };
-        conversation.messages.push(replyMessage);
-
-        await this.conversationsCache.set(conversationId, conversation);
-
-        return {
-            response: replyMessage.message,
-            conversationId,
-            messageId: replyMessage.id,
-            details: result || {},
-        };
     }
 
     async buildPrompt(messages, parentMessageId, isChatGptModel = false) {

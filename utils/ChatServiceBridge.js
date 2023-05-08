@@ -1,11 +1,15 @@
 // Run the server first with `npm run server`
 import { getAll } from '@vercel/edge-config';
-import Keyv from 'keyv';
+import ObjCache from './ObjCacheWrap';
+// import Keyv from './KeyvConnector';
 import ChatGPTClient from './client/ChatGPTClient'
 // import { HOST_URL } from './config'
 export const HOST_URL = 'http://localhost:3000';
 let settings;
 
+// =====================
+// Server side functions
+// =====================
 export const getContext = async () => {
     const config = await getAll();
     console.log('---get config---', config);
@@ -15,38 +19,37 @@ export const getContext = async () => {
         throw new Error('config not found')
     }
 
-    const clientToUse = settings.apiOptions?.clientToUse || settings.clientToUse || 'chatgpt';
-    console.log('create keyv from url: ', process.env.ChatKV_URL);
-    if (!process.env.ChatKV_URL) {
-        throw new Error('redis kv is not setup');
-    }
-    const conversationsCache = new Keyv(process.env.ChatKV_URL);
+    const clientToUse = config.apiOptions?.clientToUse || settings.clientToUse || 'chatgpt';
+    // console.log('create keyv from url: ', process.env.ChatKV_URL);
+    // if (!process.env.ChatKV_URL) {
+    //     throw new Error('redis kv is not setup');
+    // }
+    // config.cacheOptions.store = new Keyv(process.env.ChatKV_URL)
+    // console.log('debug----', Keyv);
 
-    const perMessageClientOptionsWhitelist = settings.apiOptions?.perMessageClientOptionsWhitelist || null;
+    const conversationsCache = new ObjCache();
+
+    const perMessageClientOptionsWhitelist = config.apiOptions?.perMessageClientOptionsWhitelist || null;
     settings = {
-        ...settings,
+        ...config,
         clientToUse,
         conversationsCache,
         perMessageClientOptionsWhitelist,
     }
 
     return {
-        ...settings,
+        ...config,
         clientToUse,
         conversationsCache,
         perMessageClientOptionsWhitelist,
     }
 }
 
-export async function getClient() {
+export async function getClient(clientToUse) {
     await getContext();
 
-    let clientToUseForMessage = settings.clientToUse;
-    const clientOptions = await filterClientOptions(body.clientOptions);
-    if (clientOptions && clientOptions.clientToUse) {
-        clientToUseForMessage = clientOptions.clientToUse;
-        delete clientOptions.clientToUse;
-    }
+    let clientToUseForMessage = clientToUse || settings.clientToUse;
+
     switch (clientToUseForMessage) {
         // case 'bing':
         //     return new BingAIClient(settings.bingAiClient);
@@ -132,6 +135,9 @@ export async function filterClientOptions(inputOptions) {
     return outputOptions;
 }
 
+// =====================
+// Client side functions
+// =====================
 export const callBridge = async (options) => {
     const { data, onmessage, onopen, onclose, onerror, getSignal } = options || {}
     if (!data?.message) {
@@ -155,6 +161,7 @@ export const callBridge = async (options) => {
         }),
     };
 
+    console.log('start call brdige...', new Date());
     try {
         let reply = '';
         let msgId = '';
@@ -226,69 +233,40 @@ export const callBridge = async (options) => {
         const response = await fetch(`/api/chat`, {
             ...opts,
             signal: controller.signal,
-            onopen(response) {
-                console.log('internal open: ', response);
-                if (response.status === 200) {
-                    onopen()
-                    return;
-                }
-                const err = new Error(`Failed to send message. HTTP ${response.status} - ${response.statusText}`);
-                if (onerror) {
-                    onerror(err)
-                } else {
-                    throw err;
-                }
-            },
-            onclose() {
-                console.warn('internal close')
-                const error = new Error(`Failed to send message. Server closed the connection unexpectedly.`);
-                if (onclose) {
-                    onclose(error);
-                } else {
-                    throw error;
-                }
-            },
-            onerror(err) {
-                console.error('internal error: ', err);
-                if (onerror) {
-                    onerror(err);
-                } else {
-                    throw err;
-                }
-            },
-            onmessage(message) {
-                // { data: 'Hello', event: '', id: '', retry: undefined }
-                if (aborted) {
-                    return;
-                }
-                if (message.data === '[DONE]') {
-                    console.log('done: ', message);
-                    controller.abort();
-                    aborted = true;
-                    return;
-                }
-                if (message.event === 'result') {
-                    const result = JSON.parse(message.data);
-                    console.log('result: ', result.response);
-                    msgId = result.messageId;
-                    conversationId = result.conversationId;
-                    const finalResp = result.response;
-                    if (finalResp?.length > reply?.length) {
-                        console.log('use returned full response: ', finalResp);
-                        reply = finalResp;
-                    }
-                    return;
-                }
-                if (message?.event === 'error') {
-                    onerror && onerror(message.data);
-                    return;
-                }
-                if (onmessage) {
-                    onmessage(message);
-                }
-                console.log('onmessage: ', message);
-                reply += JSON.parse(message.data);
-            },
+           
+            // onmessage(message) {
+            //     // { data: 'Hello', event: '', id: '', retry: undefined }
+            //     if (aborted) {
+            //         return;
+            //     }
+            //     if (message.data === '[DONE]') {
+            //         console.log('done: ', message);
+            //         controller.abort();
+            //         aborted = true;
+            //         return;
+            //     }
+            //     if (message.event === 'result') {
+            //         const result = JSON.parse(message.data);
+            //         console.log('result: ', result.response);
+            //         msgId = result.messageId;
+            //         conversationId = result.conversationId;
+            //         const finalResp = result.response;
+            //         if (finalResp?.length > reply?.length) {
+            //             console.log('use returned full response: ', finalResp);
+            //             reply = finalResp;
+            //         }
+            //         return;
+            //     }
+            //     if (message?.event === 'error') {
+            //         onerror && onerror(message.data);
+            //         return;
+            //     }
+            //     if (onmessage) {
+            //         onmessage(message);
+            //     }
+            //     console.log('onmessage: ', message);
+            //     reply += JSON.parse(message.data);
+            // },
         });
 
 
@@ -306,23 +284,29 @@ export const callBridge = async (options) => {
       const decoder = new TextDecoder();
       let done = false;
   
+      await onopen()
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         const chunkValue = decoder.decode(value);
         console.log('read chunk: ', chunkValue);
-        reply += chunkValue
-        // setGeneratedBios((prev) => prev + chunkValue);
+        if (chunkValue) {
+            onmessage(chunkValue);
+            // TODO: Error event handler
+            reply += chunkValue
+        }
       }
         console.log('final reply: ', reply);
-
-        return {
+        const resultObj = {
             response: reply,
             messageId: msgId,
             conversationId: conversationId,
         };
+        // Done: Result accept
+        onclose(resultObj)
+        return resultObj;
     } catch (err) {
         console.error('ERROR ', err);
-        throw err;
+        onerror(err)
     }
 }
