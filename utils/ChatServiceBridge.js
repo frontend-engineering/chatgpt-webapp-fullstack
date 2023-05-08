@@ -13,7 +13,7 @@ let settings;
 export const getContext = async () => {
     const config = await getAll();
     console.log('---get config---', config);
-    
+
     if (!config) {
         console.error('Error: need setup vercel config first');
         throw new Error('config not found')
@@ -172,155 +172,66 @@ export const callBridge = async (options) => {
             getSignal(controller);
         }
 
-
-        // const response = await fetch("/v2/api/chat", {
-        //     ...opts,
-        //     signal: controller.signal,
-        //   });
-
-        //   if (!response.ok) {
-        //     throw new Error(response.statusText);
-        //   }
-
-        //   // This data is a ReadableStream
-        //   const data = response.body;
-        //   if (!data) {
-        //     return;
-        //   }
-
-        //   const reader = data.getReader();
-        //   const decoder = new TextDecoder();
-        //   let done = false;
-
-        //   while (!done) {
-        //     const { value, done: doneReading } = await reader.read();
-        //     done = doneReading;
-        //     const chunkValue = decoder.decode(value);
-
-        //     if (message.data === '[DONE]') {
-        //         console.log('done: ', message);
-        //         controller.abort();
-        //         aborted = true;
-        //         return;
-        //     }
-        //     if (message.event === 'result') {
-        //         const result = JSON.parse(message.data);                            
-        //         console.log('result: ', result.response);
-        //         msgId = result.messageId;
-        //         conversationId = result.conversationId;
-        //         const finalResp = result.response;
-        //         if (finalResp?.length > reply?.length) {
-        //             console.log('use returned full response: ', finalResp);
-        //             reply = finalResp;
-        //         }
-        //         return;
-        //     }
-        //     if (message?.event === 'error') {
-        //         onerror && onerror(message.data);
-        //         return;
-        //     }
-        //     if (onmessage) {
-        //         onmessage(message);
-        //     }
-        //     console.log('onmessage: ', message);
-        //     reply += JSON.parse(message.data);
-
-
-        //     reply += chunkValue;
-        //   } 
-
-
         const response = await fetch(`/api/chat`, {
             ...opts,
             signal: controller.signal,
-           
-            // onmessage(message) {
-            //     // { data: 'Hello', event: '', id: '', retry: undefined }
-            //     if (aborted) {
-            //         return;
-            //     }
-            //     if (message.data === '[DONE]') {
-            //         console.log('done: ', message);
-            //         controller.abort();
-            //         aborted = true;
-            //         return;
-            //     }
-            //     if (message.event === 'result') {
-            //         const result = JSON.parse(message.data);
-            //         console.log('result: ', result.response);
-            //         msgId = result.messageId;
-            //         conversationId = result.conversationId;
-            //         const finalResp = result.response;
-            //         if (finalResp?.length > reply?.length) {
-            //             console.log('use returned full response: ', finalResp);
-            //             reply = finalResp;
-            //         }
-            //         return;
-            //     }
-            //     if (message?.event === 'error') {
-            //         onerror && onerror(message.data);
-            //         return;
-            //     }
-            //     if (onmessage) {
-            //         onmessage(message);
-            //     }
-            //     console.log('onmessage: ', message);
-            //     reply += JSON.parse(message.data);
-            // },
         });
 
 
-    if (!response.ok) {
-        throw new Error(response.statusText);
-      }
-  
-      // This data is a ReadableStream
-      const data = response.body;
-      if (!data) {
-        return;
-      }
-  
-      const reader = data.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-  
-      await onopen()
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunkValue = decoder.decode(value);
-        console.log('read chunk: ', chunkValue);
-        if (chunkValue) {
-            if (chunkValue.startsWith('[REPORT]')) {
-                try {
-                    const resp = JSON.parse(chunkValue.slice(8));
-                    console.log('report: ', resp)
-                    msgId = resp.id;
-                    conversationId = resp.conversationId;
-                    const finalResp = resp.message;
-                    if (finalResp?.length > reply?.length) {
-                        console.log('use returned full response: ', finalResp);
-                        reply = finalResp;
-                    }
-                    const resultObj = {
-                        response: reply,
-                        messageId: msgId,
-                        conversationId: conversationId,
-                    };
-                    // Done: Result accept
-                    onclose(resultObj)
-                } catch (error) {
-                    console.error('final report parse failed: ', error)
-                    onerror(error);
+        if (!response.ok) {
+            throw new Error(response.statusText);
+        }
+
+        // This data is a ReadableStream
+        const data = response.body;
+        if (!data) {
+            return;
+        }
+
+        const reader = data.getReader();
+        const decoder = new TextDecoder();
+        let done = false;
+
+        await onopen()
+        let reportStr = '';
+        while (!done) {
+            const { value, done: doneReading } = await reader.read();
+            done = doneReading;
+            const chunkValue = decoder.decode(value);
+            console.log('read chunk: ', chunkValue);
+            if (chunkValue) {
+                if (chunkValue.startsWith('[REPORT]')) {
+                    reportStr = chunkValue.slice(8) || ' ';
+                } else if (reportStr) {
+                    reportStr += chunkValue;
+                } else {
+                    onmessage(chunkValue);
+                    // TODO: Error event handler
+                    reply += chunkValue
                 }
             }
-            onmessage(chunkValue);
-            // TODO: Error event handler
-            reply += chunkValue
         }
-      }
-        console.log('final reply: ', reply);
-
+        console.log('final reply: ', reply, reportStr);
+        if (!reportStr) {
+            console.error('no request report data found')
+            return;
+        }
+        const resp = JSON.parse(reportStr);
+        console.log('report: ', resp)
+        msgId = resp.id;
+        conversationId = resp.conversationId;
+        const finalResp = resp.message;
+        if (finalResp?.length > reply?.length) {
+            console.log('use returned full response: ', finalResp);
+            reply = finalResp;
+        }
+        const resultObj = {
+            response: reply,
+            messageId: msgId,
+            conversationId: conversationId,
+        };
+        // Done: Result accept
+        onclose(resultObj)
         return resultObj;
     } catch (err) {
         console.error('ERROR ', err);
