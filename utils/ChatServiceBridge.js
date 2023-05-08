@@ -201,7 +201,7 @@ export const callBridge = async (options) => {
             console.log('read chunk: ', chunkValue);
             if (chunkValue) {
                 if (chunkValue.startsWith('[__REPORT__]')) {
-                    reportStr = chunkValue.slice(8) || ' ';
+                    reportStr = chunkValue.slice(12) || ' ';
                 } else if (reportStr) {
                     reportStr += chunkValue;
                 } else {
