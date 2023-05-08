@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid';
+import { createParser } from "eventsource-parser";
 // import { encoding_for_model as encodingForModel, get_encoding as getEncoding } from '@dqbd/tiktoken';
 // @ts-expect-error
 import * as wasm from "@dqbd/tiktoken/lite/tiktoken_bg.wasm?module";
