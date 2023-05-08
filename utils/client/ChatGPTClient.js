@@ -151,6 +151,7 @@ export default class ChatGPTClient {
         onEnd,
         onError,
     }) {
+        const self = this;
         if (!abortController) {
             abortController = new AbortController();
         }
@@ -214,7 +215,7 @@ export default class ChatGPTClient {
                             reply = null;
                             return;
                         }
-                        if (data === this.endToken) {
+                        if (data === self.endToken) {
                             return;
                         }
                         try {
