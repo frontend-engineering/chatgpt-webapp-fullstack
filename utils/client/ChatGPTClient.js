@@ -217,8 +217,9 @@ export default class ChatGPTClient {
                                 id: nanoid(),
                                 conversationId,
                                 message: reply,
+                                success: true,
                             };
-                            const queue = encoder.encode('[REPORT]' + JSON.stringify(replyMessage));
+                            const queue = encoder.encode('[__REPORT__]' + JSON.stringify(replyMessage));
                             controller.enqueue(queue);
                             setTimeout(() => {
                                 controller.close();
@@ -388,7 +389,6 @@ export default class ChatGPTClient {
                     response: replyMessage.message,
                     conversationId,
                     messageId: replyMessage.id,
-                    details: result || {},
                 };
             },
             onError: (err) => {
