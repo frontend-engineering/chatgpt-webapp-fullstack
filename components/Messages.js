@@ -71,6 +71,13 @@ const Messages = (props) => {
         }
     }, [props]);
 
+    if ([...retMsgs, ...outMsgs].filter(item => !!item).length === 0) {
+        return <div className={styles['placeholder-content']}>
+            <span>Hello！I'm a smart chat robot ^_^！</span><br/>
+            <span className={styles['description']}>This site is free to use and is only intended for learning and testing purposes.</span><br />
+            <span className={styles['description']}>It is strictly prohibited to publish or distribute any illegal or inappropriate content on this website.</span>
+        </div>
+    }
     return (
         [
             ...retMsgs,

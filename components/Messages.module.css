@@ -10,13 +10,30 @@
     border-top-right-radius:5px;
     border-top-left-radius:5px;
     line-height: 32px;
-    
 }
 
 .codebox-handler span {
     display: flex;
 }
 
+.placeholder-content {
+    text-align: center;
+    text-align: center;
+    position: absolute;
+    margin: 0 auto;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    line-height: 2rem;
+    font-size: large;
+    font-weight: bolder;
+    color: #000;
+}
+
+.placeholder-content > .description {
+    font-size: small;
+    color: #0000009c;
+}
 
 .incoming.bubble {
     background: #b2b2b2;
