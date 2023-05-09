@@ -1,4 +1,7 @@
 {
+  "name": "@frontend-engineering/chatgpt-webapp-fullstack",
+  "version": "2.0.0",
+  "description": "A full-stack web application that incorporates ChatGPT technology. It features both a webpage and a Node.js server, with the added convenience of one-click deployment on Vercel.",
   "private": true,
   "scripts": {
     "dev": "next dev",
