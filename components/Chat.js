@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar, Tag, UserSetOutline } from 'antd-mobile'
+import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar, Tag } from 'antd-mobile'
 import { PlayOutline, UserSetOutline } from 'antd-mobile-icons'
 import Cashier from '@cashier/web';
 import { useNavigate } from 'react-router-dom'
