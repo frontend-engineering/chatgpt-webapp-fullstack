@@ -11,6 +11,9 @@ let settings;
 // Server side functions
 // =====================
 export const getContext = async () => {
+    if (settings) {
+        return settings;
+    }
     const config = await getAll();
     console.log('---get config---', config);
 
@@ -87,7 +90,7 @@ export async function getClient(clientToUse) {
  * @param {*} inputOptions
  */
 export async function filterClientOptions(inputOptions) {
-    const { perMessageClientOptionsWhitelist, clientToUseForMessage } = settings || (await getContext());
+    const { perMessageClientOptionsWhitelist, clientToUseForMessage } = await getContext();
     if (!inputOptions || !perMessageClientOptionsWhitelist) {
         return null;
     }
@@ -134,6 +137,163 @@ export async function filterClientOptions(inputOptions) {
 
     return outputOptions;
 }
+
+const DomainHost = 'https://prod-sdk-api.my.webinfra.cloud';
+const cacheKeyPerDayTTL = 3600 * 24;
+
+const getCustomerInfo = async (userToken) => {
+    const { webinfraConfig } = await getContext();
+    const sdkHost = `${webinfraConfig?.host || DomainHost}/api/sdk/customer`;
+    return fetch(sdkHost, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${userToken}`,
+        },
+    })
+        .then(resp => resp.json());
+};
+
+const increCntLocal = async (uid) => {
+    const cacheKey = `cnt-${uid}`;
+    const dateStr = new Date().toDateString().replace(/\s/igm, '-');
+    const { conversationsCache } = await getContext();
+    const cacheData = await conversationsCache.get(cacheKey);
+    if (!cacheData) {
+        console.log('create local user cnt: ', cacheKey)
+        return conversationsCache.set(cacheKey, {
+            date: dateStr,
+            cnt: 1,
+        });
+    }
+    console.log('incre local user cnt: ', cacheKey, cacheData.cnt)
+    return conversationsCache.set(cacheKey, {
+        date: dateStr,
+        cnt: (cacheData.cnt || 0) + 1,
+    }, {
+        ex: cacheKeyPerDayTTL
+    });
+};
+
+const getFreeCnt = (freeCnt) => {
+    let freeCntNum = freeCnt ? Number(freeCnt) : 20;
+    if (!(freeCntNum > 0)) {
+        // 非法配置
+        console.error('FREE_CNT_PER_DAY 无效配置，重置为20');
+        freeCntNum = 20;
+    }
+    return freeCntNum;
+};
+
+export const checkLimit = async ({
+    uid,
+    token,
+}) => {
+    console.log('checking limit', uid, token);
+    const userInfo = await getCustomerInfo(token);
+    console.log('resp - ', userInfo);
+
+    if (userInfo?.success) {
+        const profile = userInfo.data?.profile;
+        // 强制用户订阅，免费版或者付费版二选一
+        if (!profile) {
+            throw new Error('用户未订阅');
+        }
+        //  有付费额度
+        if (profile?.amount > 0) {
+            return {
+                success: true,
+                data: {
+                    charged: true, // 付费额度
+                    cnt: profile.amount,
+                },
+            };
+        }
+        // 计算免费额度
+        const curDateStr = new Date().toDateString().replace(/\s/igm, '-');
+        const cacheKey = `cnt-${uid}`;
+        const { conversationsCache, freeCntPerDay } = await getContext()
+        const freeCnt = getFreeCnt(freeCntPerDay);
+
+        const cntData = await conversationsCache.get(cacheKey);
+        if (!cntData || (cntData.date !== curDateStr)) {
+            console.log('cache miss: ', cntData?.date, cacheKey);
+            await conversationsCache.set(cacheKey, {
+                date: curDateStr,
+                cnt: 0,
+            }, {
+                ex: cacheKeyPerDayTTL, // 1 day
+            });
+            return {
+                success: true,
+                data: {
+                    date: curDateStr,
+                    charged: false, // 免费额度
+                    cnt: freeCnt,
+                },
+            };
+        }
+        const { date, cnt } = cntData;
+        console.log('cache hit: ', date, cnt);
+        if (cnt >= freeCnt) {
+            // 超出免费额度，需要付费
+            return {
+                success: false,
+                message: 'Request Limited',
+                data: {
+                    date,
+                    charged: false, // 免费额度
+                    cnt: 0,
+                },
+            };
+        }
+        // 免费额度可用
+        return {
+            success: true,
+            data: {
+                date,
+                charged: false, // 免费额度
+                cnt: freeCnt - cnt,
+            },
+        };
+    }
+    return {
+        success: false,
+        data: userInfo?.data,
+        message: userInfo?.message || '获取用户信息失败',
+        code: userInfo?.errorCode,
+    };
+};
+
+export const userAmountFeedback = async (option) => {
+    const {
+        uid,
+        token,
+        charged,
+    } = option || {};
+    if (charged) {
+        console.log('user profile amount update - ', uid);
+        // 付费额度更新
+        const { webinfraConfig } = await getContext();
+        const sdkHost = `${webinfraConfig?.host || DomainHost}/api/sdk/customer/amount`;
+        return fetch(sdkHost, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                uid,
+                action: 'decrement',
+                count: 1,
+            }),
+        }).then(resp => resp.json());
+    }
+    // 更新免费额度
+    console.log('user free amount update - ', uid);
+    return increCntLocal(uid);
+};
+
 
 // =====================
 // Client side functions

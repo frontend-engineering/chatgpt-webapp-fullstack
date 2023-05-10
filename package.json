@@ -10,6 +10,7 @@
   },
   "homepage": "https://chatgpt-webapp-fullstack-b8td-8dzy0yt7z-webinfra.vercel.app/",
   "dependencies": {
+    "@cashier/web": "0.3.2",
     "@dqbd/tiktoken": "^1.0.7",
     "@fortaine/fetch-event-source": "^3.0.6",
     "@headlessui/react": "^1.7.7",

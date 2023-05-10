@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar, Tag } from 'antd-mobile'
-import { PlayOutline, HeartOutline } from 'antd-mobile-icons'
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar, Tag, UserSetOutline } from 'antd-mobile'
+import { PlayOutline, UserSetOutline } from 'antd-mobile-icons'
+import Cashier from '@cashier/web';
+import { useNavigate } from 'react-router-dom'
 import classnames from 'classnames';
 import { callBridge } from '../utils/ChatServiceBridge';
 import Messages from './Messages';
@@ -8,9 +10,11 @@ import { useLocalStorage } from '../utils/Others';
 import ShareLogo from './share.js'
 import PromotSelect from './PromptElement.js';
 import styles from './Chat.module.scss';
+import { appId, appToken, enableAuth } from './Config.js';
 
 function ChatComponent(props) {
-    const [userInfo, setUserInfo] = useState()
+    const navigate = useNavigate()
+    const [loginState, setLoginState] = useState(null)
     const [question, setQuestion] = useState("");
     const [outMsgs, setOutMsgs] = useLocalStorage('chat-out-msgs', []);
     const [retMsgs, setRetMsgs] = useLocalStorage('chat-ret-msgs', []);
@@ -34,6 +38,47 @@ function ChatComponent(props) {
     abortSignalRef.current = abortSignal;
 
     const messagesEndRef = useRef(null)
+
+    const sdkInsta = useMemo(() => {
+        if (!enableAuth) {
+            console.log('skip auth');
+            return null;
+        }
+        return new Cashier({
+            // 应用 ID
+            appId,
+            appToken,
+            // domain: 'http://localhost:3333',
+            pageDomain: 'https://pay.freecharger.cn',
+            mobile: true,
+        });
+    }, []);
+
+    const getLoginState = useCallback(async () => {
+        if (!sdkInsta) return;
+        try {
+            console.log('get login state...');
+            let state = await sdkInsta.getUserInfo();
+            console.log('get loginState resp: ', state)
+            if (!state) {
+                state = await sdkInsta.login()
+            }
+            setLoginState(state);
+        } catch (error) {
+            console.error('login state: ', error);
+            Toast.show({
+                content: `初始化失败 - ${error?.message}`
+            }) 
+        }
+    }, [sdkInsta]);
+
+    const getLoginTokens = useCallback(async () => {
+        if (!sdkInsta) return;
+        let tokens = await sdkInsta.getTokens();
+        console.log('get tokens: ', tokens)
+        return tokens;
+    }, [sdkInsta]); 
+
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -102,18 +147,26 @@ function ChatComponent(props) {
             return;
         }
 
+        if (!loginState && enableAuth) {
+            Toast.show({
+                content: '请先登录'
+            })
+            return;
+        }
+
         setQuestion('');
         setOutMsgs([...outMsgs, { id: genRandomMsgId(), msg: question, timestamp: new Date().valueOf() }])
-        if (typeof cnt === 'number') {
-            setUserInfo(userInfo)
-        }
 
         setAbortSignal(null);
         setTyping(true);
         // 向云服务发起调用
         try {
+            const tokens = await getLoginTokens();
+
             const callRes = await callBridge({
                 data: {
+                    uid: loginState?.id,
+                    at: tokens?.accessToken,
                     message: question,
                     parentMessageId: msgId,
                     conversationId: convId,
@@ -151,19 +204,13 @@ function ChatComponent(props) {
             setTyping(false);
         }
     }
-    const startCollect = (e) => {
-        e.preventDefault();
-        Toast.show({
-            content: 'Coming Soon'
-        })
-    }
 
-    const startShare = (e) => {
+    const gotoAccount = (e) => {
         e.preventDefault();
-        console.log('share ....')
-        Toast.show({
-            content: 'Coming Soon'
-        })
+        console.log('goto account page ....')
+        if (enableAuth) {
+            navigate('/build/account');
+        }
     }
 
     const deleteItem = (id, type) => {
@@ -199,8 +246,17 @@ function ChatComponent(props) {
 
 
     useEffect(() => {
-        scrollToBottom()
-    }, [retMsgs, outMsgs]);
+        if (sdkInsta) {
+            sdkInsta.init()
+                .then((resp) => {
+                    if (resp) {
+                        // 加载到了操作结果数据，反馈登录/购买结果给用户
+                        console.log('found resp: ', resp);
+                    }
+                    return getLoginState()                    
+                })
+        }
+    }, [sdkInsta, getLoginState]);
 
     useEffect(() => {
         setTimeout(() => {
@@ -218,14 +274,14 @@ function ChatComponent(props) {
 
     return (<div className={styles["container"]}>
         <div className={styles["chatbox"]}>
+            <div id='sdk-root'></div>
             <div className={styles["top-bar"]}>
             <div className={styles["avatar"]}>
-                <p>W</p>
+                <p>{loginState?.name?.toUpperCase().slice(0, 2) || 'W'}</p>
             </div>
             <div className={styles["name"]}>WebInfra</div>
             <div className={styles["menu"]}>
-                <HeartOutline onClick={startCollect} />
-                <ShareLogo onClick={startShare} />
+                <UserSetOutline onClick={gotoAccount} />
             </div>
             </div>
             { hasNotice ? <div className={styles['notice']}>
@@ -236,7 +292,7 @@ function ChatComponent(props) {
                     <Messages
                         retMsgs={[ ...retMsgs, answer ? { msg: answer, timestamp: answerTS } : null ].map(item => { item && (item.type = 'incoming'); return item })}
                         outMsgs={outMsgs.map(item => { item && (item.type = 'outgoing'); return item })}
-                        userInfo={userInfo}
+                        userInfo={loginState}
                         onItemDeleted={deleteItem}
                         onEdit={editItem} />
                     <div className={styles['chat-bottom-line']} ref={messagesEndRef}></div>

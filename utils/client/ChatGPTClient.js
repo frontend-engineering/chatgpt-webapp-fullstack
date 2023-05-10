@@ -385,6 +385,8 @@ export default class ChatGPTClient {
 
                 await this.conversationsCache.set(conversationId, conversation);
 
+                opts.onEnd && opts.onEnd(replyMessage);
+
                 return {
                     response: replyMessage.message,
                     conversationId,

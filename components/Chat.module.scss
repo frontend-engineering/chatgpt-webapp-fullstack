@@ -25,6 +25,18 @@
     text-align: left;
     background: #F9FBFF;
 }
+#sdk-root {
+    position: fixed;
+    display: block;
+    box-sizing: border-box;
+    width: 100vw;
+    height: fit-content;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    z-index: 999;
+}
 
 .messages {
     position: absolute;
@@ -104,13 +116,19 @@
 
 .avatar p {
     color: #F9FBFF;
-    margin: 7px 12px;
+    line-height: 35px;
+    box-sizing: border-box;
+    margin: 0;
+    text-align: center;
 }
 
 .avatar {
     img, svg {
         height: 100%;
         width: auto;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
     }
 }
 
