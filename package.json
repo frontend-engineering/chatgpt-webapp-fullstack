@@ -1,0 +1,50 @@
+{
+  "name": "@frontend-engineering/chatgpt-webapp-fullstack",
+  "version": "2.0.0",
+  "description": "A full-stack web application that incorporates ChatGPT technology. It features both a webpage and a Node.js server, with the added convenience of one-click deployment on Vercel.",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "homepage": "https://chatgpt-webapp-fullstack-b8td-8dzy0yt7z-webinfra.vercel.app/",
+  "dependencies": {
+    "@dqbd/tiktoken": "^1.0.7",
+    "@fortaine/fetch-event-source": "^3.0.6",
+    "@headlessui/react": "^1.7.7",
+    "@headlessui/tailwindcss": "^0.1.2",
+    "@heroicons/react": "^2.0.13",
+    "@keyv/redis": "^2.5.7",
+    "@tailwindcss/forms": "^0.5.3",
+    "@vercel/analytics": "^0.1.8",
+    "@vercel/edge-config": "^0.1.9",
+    "@vercel/edge-primitives": "^0.12.4",
+    "@vercel/kv": "^0.1.1",
+    "antd-mobile": "^5.29.1",
+    "antd-mobile-icons": "^0.3.0",
+    "classnames": "^2.3.2",
+    "eventsource-parser": "^0.0.5",
+    "keyv": "^4.5.2",
+    "nanoid": "^4.0.2",
+    "next": "latest",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-hook-form": "^7.42.0",
+    "react-hot-toast": "^2.4.0",
+    "react-markdown": "^8.0.7",
+    "react-syntax-highlighter": "^15.5.0",
+    "react-use-measure": "^2.1.1",
+    "sass": "^1.62.1",
+    "whatwg-fetch": "^3.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "18.11.3",
+    "@types/react": "18.0.21",
+    "@types/react-dom": "18.0.6",
+    "autoprefixer": "^10.4.12",
+    "postcss": "^8.4.18",
+    "tailwindcss": "^3.2.4",
+    "typescript": "4.9.4"
+  }
+}

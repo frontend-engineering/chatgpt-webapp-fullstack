@@ -20,7 +20,7 @@
 在微信中打开 [DEMO](https://chat.webinfra.cloud)
 或扫码
 <p align="center">
-  <img alt="demo qr" width="128px" src="./assets/qr.jpg">
+  <img alt="demo qr" width="128px" src="./public/assets/qr.jpg">
 </p>
 
 ## 项目结构说明
@@ -109,7 +109,7 @@ npm run start
 
  或加交流群
  <p align="center">
-    <img width="248px" src="/assets/group-qr-5-16.jpeg" />
+    <img width="248px" src="/public/assets/group-qr-5-16.jpeg" />
   </p>
 
 ## License
