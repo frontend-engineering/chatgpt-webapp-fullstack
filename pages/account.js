@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { List, Avatar, Toast } from 'antd-mobile';
 import Cashier from '@cashier/web';
 import { appId, appToken } from './config.js';
-import './Account.css';
+import './account.css';
 
 const Account = () => {
     const [loginState, setLoginState] = useState(null)
