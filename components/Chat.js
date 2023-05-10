@@ -206,7 +206,8 @@ function ChatComponent(props) {
         e.preventDefault();
         console.log('goto account page ....')
         if (enableAuth) {
-            window?.location?.href = '/account';
+            // window?.location = '/account';
+            window?.history?.pushState({}, "", '/account');
         }
     }
 
