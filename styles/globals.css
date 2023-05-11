@@ -14,3 +14,16 @@
 .adm-list-item-content-main {
     width: 100%;
 }
+
+#sdk-root {
+    position: fixed;
+    display: block;
+    box-sizing: border-box;
+    width: 100vw;
+    height: fit-content;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    z-index: 999;
+}
