@@ -1,7 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@cashier/web': 0.3.2
+  '@cashier/web': 0.3.3
   '@dqbd/tiktoken': ^1.0.7
   '@fortaine/fetch-event-source': ^3.0.6
   '@headlessui/react': ^1.7.7
@@ -38,7 +38,7 @@ specifiers:
   whatwg-fetch: ^3.6.2
 
 dependencies:
-  '@cashier/web': registry.npmmirror.com/@cashier/web/0.3.2
+  '@cashier/web': registry.npmmirror.com/@cashier/web/0.3.3
   '@dqbd/tiktoken': registry.npmmirror.com/@dqbd/tiktoken/1.0.7
   '@fortaine/fetch-event-source': registry.npmmirror.com/@fortaine/fetch-event-source/3.0.6
   '@headlessui/react': registry.npmmirror.com/@headlessui/react/1.7.14_biqbaboplfbrettd7655fr4n2y
@@ -93,10 +93,10 @@ packages:
       regenerator-runtime: registry.npmmirror.com/regenerator-runtime/0.13.11
     dev: false
 
-  registry.npmmirror.com/@cashier/web/0.3.2:
-    resolution: {integrity: sha512-akUOTe4LqzBe2PGVaQq/UqbNEEACXYMyvcliMVqY/el0P9FKDBMZmvbVKFyI8rgX7Dm7hbN8tE9Z8q5Fl4L/9g==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@cashier/web/-/web-0.3.2.tgz}
+  registry.npmmirror.com/@cashier/web/0.3.3:
+    resolution: {integrity: sha512-838kub5UYEl6hGiOurbGIqhSlhv8XyDo817t15rWUnBa7jYRbdxJIDgWrJR8n3GwXi5txHLcqK1a5B8ulzc7lQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/@cashier/web/-/web-0.3.3.tgz}
     name: '@cashier/web'
-    version: 0.3.2
+    version: 0.3.3
     dependencies:
       axios: registry.npmmirror.com/axios/0.26.1
       rollup-plugin-node-polyfills: registry.npmmirror.com/rollup-plugin-node-polyfills/0.2.1
