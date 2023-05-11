@@ -1,12 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { List, Avatar, Toast } from 'antd-mobile';
 import Cashier from '@cashier/web';
-import { appId, appToken } from '../components/Config.js';
-import './account.css';
+import { appId, appToken, enableAuth } from '../components/Config.js';
+import './account.module.css';
 
 const Account = () => {
     const [loginState, setLoginState] = useState(null)
     const sdkInsta = useMemo(() => {
+        if (!enableAuth) {
+            console.log('skip auth');
+            return null;
+        }
         return new Cashier({
             // 应用 ID
             appId,
