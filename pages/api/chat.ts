@@ -19,7 +19,7 @@ const handler = async (req: Request): Promise<Response> => {
   const { uid, at } = body;
   let isCharged = false; // 是否消耗付费额度
   try {
-      const { enableAuth } = await getContext();
+      const enableAuth = process.env.NEXT_PUBLIC_ENABLE_AUTH;
       console.log('enable auth: ', enableAuth);
       if (enableAuth === 'WebInfra') {
           if (!uid) {
