@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { List, Avatar, Toast } from 'antd-mobile';
 import Cashier from '@cashier/web';
-import { appId, appToken } from '../components/config.js';
+import { appId, appToken } from '../components/Config.js';
 import './account.css';
 
 const Account = () => {
