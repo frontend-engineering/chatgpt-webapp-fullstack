@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import { Toast, Button, Modal, TextArea, SafeArea, NoticeBar, Tag } from 'antd-mobile'
 import { PlayOutline, UserSetOutline } from 'antd-mobile-icons'
 import Cashier from '@cashier/web';
@@ -11,6 +12,7 @@ import styles from './Chat.module.scss';
 import { appId, appToken, enableAuth } from './Config.js';
 
 function ChatComponent(props) {
+    const router = useRouter();
     const [loginState, setLoginState] = useState(null)
     const [question, setQuestion] = useState("");
     const [outMsgs, setOutMsgs] = useLocalStorage('chat-out-msgs', []);
@@ -48,6 +50,7 @@ function ChatComponent(props) {
             // domain: 'http://localhost:3333',
             pageDomain: 'https://pay.freecharger.cn',
             mobile: true,
+            root: '#sdk-root'
         });
     }, []);
 
@@ -206,8 +209,7 @@ function ChatComponent(props) {
         e.preventDefault();
         console.log('goto account page ....')
         if (enableAuth) {
-            // window?.location = '/account';
-            window?.history?.pushState({}, "", '/account');
+            router.push('/account')
         }
     }
 

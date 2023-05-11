@@ -15,6 +15,7 @@ const Account = () => {
             // 应用 ID
             appId,
             appToken,
+            root: '#sdk-root',
             // domain: 'https://test-sdk-api.my.webinfra.cloud'
             // domain: 'http://localhost:3333',
             pageDomain: 'https://pay.freecharger.cn',
