@@ -160,6 +160,7 @@
     cursor: pointer;
     display: flex;
     justify-content: space-between;
+    flex-direction: row-reverse;
     svg {
         width: 20px;
         height: 20px;
