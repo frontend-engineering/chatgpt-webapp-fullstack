@@ -45,6 +45,13 @@ const Account = () => {
     }, [sdkInsta]);
 
     const goPurchase = useCallback(async () => {
+        if (!enableAuth) {
+            console.log('skip auth');
+            Toast.show({
+                content: '用户功能模块已禁用',
+            })
+            return null;
+        }
         if (!sdkInsta) return;
         const resp = await sdkInsta.purchase({})
         console.log('purchase resp: ', resp);
@@ -67,6 +74,13 @@ const Account = () => {
 
     const fetchUserAuth = (e) => {
         e.preventDefault();
+        if (!enableAuth) {
+            console.log('skip auth');
+            Toast.show({
+                content: '用户功能模块已禁用',
+            })
+            return null;
+        }
         getLoginState()
         return;
     }
