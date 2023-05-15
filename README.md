@@ -5,15 +5,25 @@
 ![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/WeixinCloud/wxcloudrun-express/sequelize)
 
 
-这是一个 ChatGPT 聊天应用，包含网页端App和一个Node服务，可快速部署一套自用的完整智能聊天服务（[点击体验](https://chat.webinfra.cloud)）
+这是一个 ChatGPT 聊天应用，包含网页端App和一个Node服务，可快速部署一套自用的完整智能聊天服务（[点击体验](https://www.webinfra.cloud)）
 
-经过线上检验完全可以成为学习、工作和生活中的小帮手，适合感兴趣的同学自用。
+## 功能特点
 
-后台目前接入的服务默认是ChatGPT，也同时兼容BingAI或者其他国内模型，只需Node服务配置下环境变量即可。
+* 全栈应用：包括 **网页端App** 和 **服务端Node服务**，适合全链路功能的二次开发
+* 快速部署：项目迁移到了Nextjs架构，前后端一键部署，无须一行代码，小白也可以发布自己的ChatGPT服务了
+* 无须运维：利用vercel的免费额度，摆脱繁琐的运维工作
+* 无须翻墙：针对国内无法直接访问OpenAI的限制，本服务部署完成后，可直接访问，无须科学上网
+* 多端适配：适配手机端和PC端，更多客户端功能迭代中
+* 上下文记忆：问了保障问答质量，缓存了提问记录
+* stream响应：支持stream的响应方式，更好的问答体验
+* 流量控制：支持单用户的调用流量限制，防止恶意盗刷Token
+* 用户充值：支持开启用户收费功能，用户可充值购买调用额度
 
-<p align="center">
-    <video width="248px" src="https://user-images.githubusercontent.com/9939767/224280622-811fe048-8f39-469b-a199-53b32098b100.mov" controls autoplay />
-</p>
+>> 功能开发快速迭代中，使用或部署时如果遇到任何问题，请加页面最下方微信交流群反馈
+
+https://github.com/frontend-engineering/chatgpt-webapp-fullstack/assets/9939767/eaef68ce-e73b-4dd5-9277-6b0f4f201455
+
+
 
 ## 一键部署
 
@@ -59,92 +69,25 @@
 }
 ```
 
+## 项目结构
+
+项目迁移到了NextJS，开发参考 [Next.js文档](https://nextjs.org/docs)
+
 ## 项目体验
 
-在微信中打开 [DEMO](https://chat.webinfra.cloud)
+打开 [DEMO](https://www.webinfra.cloud)
 或扫码
 <p align="center">
   <img alt="demo qr" width="128px" src="./public/assets/qr.jpg">
 </p>
 
-## 项目结构说明
 
-```
-├── client
-├── node-api
-├── Dockerfile
-├── README.md
-├── assets
-├── LICENSE
-```
-
-- `client`：前端代码，一个独立的 React 项目
-- `node-api`：服务端代码，nodejs 启动的 server，整合前端数据和对话上下文，调用 ChatGPT 的API
-- `README.md`：项目文档
-- `Dockerfile`：容器配置文件
-- `assets`：静态资源目录
-- `LICENSE`：LICENSE 说明
-
-
->> 服务端项目fork自 [upstream](https://github.com/waylaidwanderer/node-chatgpt-api) 项目，该项目最开始用做调用OpenAI内部训练的免费模型，不过稳定性不好，维护成本较高，目前不推荐了。
-也保留了该项目的README文件用做参考或者直接去原项目查看详情。
-
-
-## 快速开始
-
-### 启动服务端
-
-服务端代码在 `node-api` 目录中，是个标准的 nodejs 项目
-
-进入目录中，先安装依赖：
-```javascript
-npm install
-```
-
-启动项目
-```javascript
-npm run start
-```
-
-注意：项目启动时**唯一**需要配置的是 OpenAI 账户的 ApiKey，可以通过命令行中直接配置环境变量 `OPENAI_API_KEY`，在生成环境，建议通过 `settings.js` 来配置。
-
-另外，如需同时配置多个ApiKey，只需要将多个key中间用 `","` 隔开即可，注意中英文切换，例如
-```
-OPENAI_API_KEY=sk-Ek6f5n*q7X*8I2mgH****T***F**I97ON**y*BzUpc,sk-Ek6f5n*q7X*8I2mgH****T***F**I97ON**y*BzUpc,sk-Ek6f5n*q7X*8I2mgH****T***F**I97ON**y*BzUpc
-```
-
-![settings.js](https://flashpixel-1253674045.cos.ap-shanghai.myqcloud.com/WeChatWorkScreenshot_1f621a72-0215-4b7c-8788-691042134155.png)
-
-
-![项目启动](https://flashpixel-1253674045.cos.ap-shanghai.myqcloud.com/WeChatWorkScreenshot_bdb8b38d-fbfe-4333-842d-144d9c8fe3f0.png)
-
-### 启动前端页面
-
-前端页面代码在目录 `client` 中，是个简单的CRA项目
-
-进入目录中，先安装依赖：
-```javascript
-npm install
-```
-
-然后，启动项目
-
-```javascript
-npm run start
-```
-
-即可开始愉快地聊天啦～
-
-![](https://flashpixel-1253674045.cos.ap-shanghai.myqcloud.com/IMG_0101.PNG)
 
 ## 更多功能
 更多功能正在开发中，如有需要可以私聊，或者贡献PR
 
-* 预设常用场景的prompt
-* 用户登录
-* 流量控制
-* 前端聊天界面 Prompt 预设选项
-* 微信分享
+* 前端WebApp功能补全
+* BingAI等多模型支持
 * 其他
 
 ## 私有部署
