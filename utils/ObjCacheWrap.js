@@ -1,6 +1,6 @@
 import kv from "@vercel/kv";
 
-const EXPIRE_TIME = 2600 * 24 * 7
+const EXPIRE_TIME = 3600 * 24 * 7
 
 class ObjCacheWrap {
     async get(key) {

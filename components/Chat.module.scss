@@ -104,13 +104,19 @@
 
 .avatar p {
     color: #F9FBFF;
-    margin: 7px 12px;
+    line-height: 35px;
+    box-sizing: border-box;
+    margin: 0;
+    text-align: center;
 }
 
 .avatar {
     img, svg {
         height: 100%;
         width: auto;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
     }
 }
 
@@ -154,6 +160,7 @@
     cursor: pointer;
     display: flex;
     justify-content: space-between;
+    flex-direction: row-reverse;
     svg {
         width: 20px;
         height: 20px;
