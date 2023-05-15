@@ -99,11 +99,11 @@ const Account = () => {
         <List header='用户信息' mode='card'>
             <List.Item
                 prefix={<Avatar src={loginState?.avatar || loginState?.weixinProfile?.headimgurl} />}
-                description={loginState?.profile?.amount > 0 ? ('额度有效期至 ' + new Date(loginState.profile.expireAt).toLocaleDateString()) : '免费额度用完为止，不会自动刷新'}
+                description={loginState?.profile?.amount > 0 ? ('额度有效期至 ' + new Date(loginState?.profile.expireAt).toLocaleDateString()) : '免费额度用完为止，不会自动刷新'}
             >
                 {loginState ? (loginState.weixinProfile?.nickname || loginState?.name || loginState?.email || loginState?.id).slice(0, 13) : '未登录'}
             </List.Item>
-            <List.Item extra={new Date(loginState.profile.expireAt).valueOf() > Date.now() ? (loginState?.profile?.amount > 0 ? loginState?.profile?.amount : 0) : '-'} onClick={goPurchase}>
+            <List.Item extra={new Date(loginState?.profile.expireAt).valueOf() > Date.now() ? (loginState?.profile?.amount > 0 ? loginState?.profile?.amount : 0) : '-'} onClick={goPurchase}>
                 存储额度
             </List.Item>
             <List.Item onClick={handleHelpClick}>联系客服</List.Item>
