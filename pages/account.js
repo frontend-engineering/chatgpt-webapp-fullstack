@@ -103,7 +103,7 @@ const Account = () => {
             >
                 {loginState ? (loginState.weixinProfile?.nickname || loginState?.name || loginState?.email || loginState?.id).slice(0, 13) : '未登录'}
             </List.Item>
-            <List.Item extra={new Date(loginState?.profile.expireAt).valueOf() > Date.now() ? (loginState?.profile?.amount > 0 ? loginState?.profile?.amount : 0) : '-'} onClick={goPurchase}>
+            <List.Item extra={loginState?.profile?.expireAt ? (new Date(loginState?.profile?.expireAt).valueOf() > Date.now() ? (loginState?.profile?.amount > 0 ? loginState?.profile?.amount : 0) : '-') : '-'} onClick={goPurchase}>
                 存储额度
             </List.Item>
             <List.Item onClick={handleHelpClick}>联系客服</List.Item>
