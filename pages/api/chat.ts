@@ -80,7 +80,9 @@ const handler = async (req: Request): Promise<Response> => {
           charged: isCharged,
         }).then((amountUpdated) => {
             console.log('amount update result: ', JSON.stringify(amountUpdated));
-        });
+        }).catch(err => {
+          console.error('amount update failed: ', err);
+        })
       },
       // abortController,
   });

@@ -200,7 +200,7 @@ export const checkLimit = async ({
             throw new Error('用户未订阅');
         }
         //  有付费额度
-        if (profile?.amount > 0) {
+        if ((profile?.amount > 0) && (new Date(profile.expireAt).valueOf() > Date.now())) {
             return {
                 success: true,
                 data: {
@@ -208,6 +208,8 @@ export const checkLimit = async ({
                     cnt: profile.amount,
                 },
             };
+        } else {
+            console.log(' no valid amount ');
         }
         // 计算免费额度
         const curDateStr = new Date().toDateString().replace(/\s/igm, '-');
