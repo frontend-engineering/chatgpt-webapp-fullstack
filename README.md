@@ -15,6 +15,50 @@
     <video width="248px" src="https://user-images.githubusercontent.com/9939767/224280622-811fe048-8f39-469b-a199-53b32098b100.mov" controls autoplay />
 </p>
 
+## 一键部署
+
+自动部署服务到Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffrontend-engineering%2Fchatgpt-webapp-fullstack&project-name=private-chatgpt-service&repository-name=chatgpt-webapp-fullstack&demo-title=Demo%20Page&demo-description=%E7%A4%BA%E4%BE%8B%E9%A1%B9%E7%9B%AE&demo-url=https%3A%2F%2Fwebinfra.cloud)
+
+### 部署依赖
+
+需要额外配置vercel Edge Config 和 Vercel KV 两个store
+* Edge Config 用来管理项目配置
+* KV 用于存储用户聊天上下文的数据缓存
+
+其中，Edge Config的初始配置可以参考
+```
+{
+  "chatGptClient": {
+    "openaiApiKey": "sk-你的openai api key",
+    "reverseProxyUrl": "",
+    "modelOptions": {
+      "model": "gpt-3.5-turbo",
+      "max_tokens": 1000
+    },
+    "proxy": "",
+    "debug": false
+  },
+  "apiOptions": {
+    "port": 3000,
+    "host": "0.0.0.0",
+    "debug": false,
+    "clientToUse": "chatgpt",
+    "perMessageClientOptionsWhitelist": {
+      "validClientsToUse": ["bing", "chatgpt", "chatgpt-browser"],
+      "chatgpt": [
+        "promptPrefix",
+        "userLabel",
+        "chatGptLabel",
+        "modelOptions.temperature"
+      ]
+    }
+  },
+  "cacheOptions": {}
+}
+```
+
 ## 项目体验
 
 在微信中打开 [DEMO](https://chat.webinfra.cloud)
@@ -109,7 +153,7 @@ npm run start
 
  或加交流群
  <p align="center">
-    <img width="248px" src="/public/assets/group-qr-5-16.jpeg" />
+    <img width="248px" src="/public/assets/group-qr-5-22.jpeg" />
   </p>
 
 ## License
