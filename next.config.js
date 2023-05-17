@@ -4,7 +4,7 @@
 // const { dirname, relative, resolve, join } = require("path");
 
 const conf = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   swcMinify: true,
   async redirects() {
     return [
