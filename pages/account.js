@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { List, Avatar, Toast } from 'antd-mobile';
+import { NavBar, List, Avatar, Toast } from 'antd-mobile';
 import Cashier from '@cashier/web';
+import { useRouter } from 'next/router';
 import { appId, appToken, enableAuth } from '../components/Config.js';
 import './account.module.css';
 
 const Account = () => {
+    const router = useRouter();
     const [loginState, setLoginState] = useState(null)
     const sdkInsta = useMemo(() => {
         if (!enableAuth) {
@@ -15,11 +17,12 @@ const Account = () => {
             // 应用 ID
             appId,
             appToken,
-            root: '#sdk-root',
             // domain: 'https://test-sdk-api.my.webinfra.cloud'
             // domain: 'http://localhost:3333',
             pageDomain: 'https://pay.freecharger.cn',
             mobile: true,
+            inPage: true,
+            root: '#sdk-root'
         });
     }, []);
 
@@ -55,7 +58,12 @@ const Account = () => {
         if (!sdkInsta) return;
         const resp = await sdkInsta.purchase({})
         console.log('purchase resp: ', resp);
+        getLoginState();
     }, [sdkInsta]);
+
+    const back = () => {
+        router.push('/');
+    }
 
     const handleHelpClick = (e) => {
         e.preventDefault();
@@ -95,16 +103,20 @@ const Account = () => {
     }, [sdkInsta, getLoginState])
 
     return <div className='account-container'>
+        <NavBar onBack={back}>账户中心</NavBar>
         <div id='sdk-root'></div>
         <List header='用户信息' mode='card'>
             <List.Item
                 prefix={<Avatar src={loginState?.avatar || loginState?.weixinProfile?.headimgurl} />}
-                description={loginState?.profile?.amount > 0 ? ('额度有效期至 ' + new Date(loginState?.profile.expireAt).toLocaleDateString()) : '免费额度用完为止，不会自动刷新'}
+                description={loginState?.profile?.amount > 0 ? (loginState?.profile?.expireAt ? '额度有效期至 ' + new Date(loginState?.profile.expireAt).toLocaleDateString() : '') : '免费额度用完为止，不会自动刷新'}
             >
                 {loginState ? (loginState.weixinProfile?.nickname || loginState?.name || loginState?.email || loginState?.id).slice(0, 13) : '未登录'}
             </List.Item>
-            <List.Item extra={loginState?.profile?.expireAt ? (new Date(loginState?.profile?.expireAt).valueOf() > Date.now() ? (loginState?.profile?.amount > 0 ? loginState?.profile?.amount : 0) : '-') : '-'} onClick={goPurchase}>
-                存储额度
+            <List.Item extra={loginState?.profile?.expireAt ? (new Date(loginState?.profile?.expireAt).valueOf() > Date.now() ? (loginState?.profile?.amount > 0 ? loginState?.profile?.amount : 0) : '-') : (loginState?.profile?.amount > 0 ? loginState?.profile?.amount : 0)}>
+                当前额度
+            </List.Item>
+            <List.Item onClick={goPurchase}>
+                额度充值
             </List.Item>
             <List.Item onClick={handleHelpClick}>联系客服</List.Item>
             <List.Item onClick={loginState ? clearUserAuth : fetchUserAuth}>
