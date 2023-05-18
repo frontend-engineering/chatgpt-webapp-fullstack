@@ -58,6 +58,7 @@ const Account = () => {
         if (!sdkInsta) return;
         const resp = await sdkInsta.purchase({})
         console.log('purchase resp: ', resp);
+        getLoginState();
     }, [sdkInsta]);
 
     const back = () => {
