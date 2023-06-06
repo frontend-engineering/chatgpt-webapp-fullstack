@@ -96,7 +96,7 @@ https://github.com/frontend-engineering/chatgpt-webapp-fullstack/assets/9939767/
 
  或加交流群
 <p align="center">
-  <img width="248px" src="/public/assets/group-qr-6-3.jpeg" />
+  <img width="248px" src="/public/assets/group-qr-6-13.jpeg" />
 </p>
 
 ## License
